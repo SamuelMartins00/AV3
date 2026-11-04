@@ -1,0 +1,57 @@
+{
+  "name": "av2",
+  "version": "1.0.0",
+  "description": "Sistema de logística reversa",
+  "homepage": "https://github.com/SamuelMartins00/AV2#readme",
+  "bugs": {
+    "url": "https://github.com/SamuelMartins00/AV2/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamuelMartins00/AV2.git"
+  },
+  "license": "ISC",
+  "author": "Samuel Martins",
+  "type": "module",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "test:integracao": "vitest run --config vitest.integracao.config.ts"
+  },
+  "dependencies": {
+    "@fastify/jwt": "^10.2.5",
+    "@fastify/swagger": "^9.9.2",
+    "@fastify/swagger-ui": "^6.1.2",
+    "@prisma/adapter-mariadb": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.8",
+    "fastify": "^5.12.7",
+    "fastify-plugin": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
+  }
+}
