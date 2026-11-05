@@ -47,6 +47,17 @@
 - Equipamentos com triagem, mudança operacional registrada, movimentação, desmontagem ou baixa definitiva são preservados e a exclusão é bloqueada com HTTP 409. Equipamento inexistente retorna 404.
 - A exclusão de equipamento não exclui o lote pai. A FK `Movimentacao.equipamento` usa `onDelete: Restrict`; se houver uma movimentação que escape à verificação prévia, a restrição do banco bloqueia a exclusão.
 
+## 4.1 Avaliações de recuperação
+
+- A rota `POST /api/v1/equipamentos/:id/avaliacoes-recuperacao` exige autenticação e os papéis `ADMINISTRADOR` ou `GESTOR_ALMOXARIFADO`; auditor e operador de cadastro não podem registrar avaliações.
+- O corpo aceita somente `material`, `valorEstimado` e `observacao` opcional. Campos como `responsavel` e `estadoFisicoSnapshot` são rejeitados; o responsável vem do usuário autenticado e o snapshot é capturado no servidor.
+- A avaliação só pode ser criada quando `resultadoTriagem` já contém uma decisão diferente de `AGUARDANDO_AVALIACAO`. Valor `NULL` também representa ausência de triagem concluída e é recusado com HTTP 409.
+- Cada avaliação registra `estadoFisicoSnapshot` e `valorEstimado` como fotografia e estimativa no instante do cadastro. `valorRealizado` permanece independente e nulo até que exista realização financeira efetiva; uma estimativa nunca deve ser interpretada como receita realizada.
+- Não existe unicidade por par equipamento/material: avaliações repetidas para o mesmo material e equipamento são permitidas e preservadas como registros históricos independentes.
+- A criação da avaliação e o evento `CRIAR_AVALIACAO_RECUPERACAO` no journal são confirmados na mesma transação. Falha na auditoria reverte a criação.
+- A operação usa compare-and-swap sobre `Equipamento.versao`: a versão e o resultado de triagem observados precisam continuar iguais na escrita condicional, que incrementa a versão antes da criação. Isso serializa o cadastro contra operações concorrentes de triagem e alteração do estado físico que também respeitam a versão. Conflito retorna HTTP 409; o cliente deve recarregar o equipamento e decidir se tenta novamente.
+- Equipamento inexistente retorna HTTP 404; corpo inválido ou com propriedade adicional é rejeitado pelo schema Fastify (HTTP 400); material vazio após normalização é erro de domínio HTTP 422; ausência de autenticação retorna 401 e papel sem permissão retorna 403.
+
 ## 5. Movimentações e rastreabilidade
 
 - Cada movimentação referencia um equipamento existente e guarda data/hora, origem, destino, responsável e observação opcional. A relação usa `onDelete: Restrict`.
