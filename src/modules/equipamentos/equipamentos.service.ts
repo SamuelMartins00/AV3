@@ -175,42 +175,37 @@ export class EquipamentosService {
   }
 
   async criarAvaliacaoRecuperacao(
-  id: number,
-  corpo: CriarAvaliacaoRecuperacaoBody,
-  usuario: string,
-) {
-  const equipamento = await this.obterOuFalhar(id);
+    id: number,
+    corpo: CriarAvaliacaoRecuperacaoBody,
+    usuario: string,
+  ) {
+    const material = corpo.material.trim();
+    if (!material) {
+      throw new ErroDominio("O material não pode ser vazio.", 422);
+    }
 
-  if (equipamento.resultadoTriagem === "AGUARDANDO_AVALIACAO") {
-    throw new ErroDominio(
-      "A avaliação de recuperação só pode ser realizada após a conclusão da triagem do equipamento.",
-      409,
-    );
+    const resultado = await repo.criarAvaliacaoRecuperacao(id, {
+      material,
+      valorEstimado: corpo.valorEstimado,
+      responsavel: usuario,
+      observacao: corpo.observacao?.trim() || undefined,
+    });
+
+    if (resultado.tipo === "nao_encontrada") {
+      throw naoEncontrado(id);
+    }
+
+    if (resultado.tipo === "conflito") {
+      throw new ErroDominio(MSG_CONFLITO, 409);
+    }
+
+    if (resultado.tipo === "triagem_pendente") {
+      throw new ErroDominio(
+        "A avaliação de recuperação só pode ser realizada após a conclusão da triagem do equipamento.",
+        409,
+      );
+    }
+
+    return avaliacaoRecuperacaoParaResposta(resultado.valor);
   }
-
-  const material = corpo.material.trim();
-  if (!material) {
-    throw new ErroDominio("O material não pode ser vazio.", 422);
-  }
-
-  const resultado = await repo.criarAvaliacaoRecuperacao(id, {
-    material,
-    valorEstimado: corpo.valorEstimado,
-    responsavel: usuario,
-    observacao: corpo.observacao?.trim() || undefined,
-  });
-
-  if (resultado.tipo === "nao_encontrada") {
-    throw naoEncontrado(id);
-  }
-
-  if (resultado.tipo === "triagem_pendente") {
-    throw new ErroDominio(
-      "A avaliação de recuperação só pode ser realizada após a conclusão da triagem do equipamento.",
-      409,
-    );
-  }
-
-  return avaliacaoRecuperacaoParaResposta(resultado.valor);
-}
 }

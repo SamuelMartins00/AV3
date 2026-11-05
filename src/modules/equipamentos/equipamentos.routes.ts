@@ -72,6 +72,29 @@ export default async function equipamentosRoutes(app: FastifyInstance) {
     {
       schema: CriarAvaliacaoRecuperacaoSchema,
       onRequest: escrita,
+      // O Ajv padrão do Fastify pode remover propriedades adicionais antes
+      // da validação. Verificamos o payload original para rejeitá-las de fato.
+      preValidation: async (request, reply) => {
+        const body: unknown = request.body;
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+          return;
+        }
+
+        const propriedadesPermitidas = new Set([
+          "material",
+          "valorEstimado",
+          "observacao",
+        ]);
+        const propriedadesExtras = Object.keys(body).filter(
+          (propriedade) => !propriedadesPermitidas.has(propriedade),
+        );
+
+        if (propriedadesExtras.length > 0) {
+          return reply.status(400).send({
+            erro: `Propriedades não permitidas: ${propriedadesExtras.join(", ")}.`,
+          });
+        }
+      },
     },
     controller.criarAvaliacaoRecuperacao,
   );

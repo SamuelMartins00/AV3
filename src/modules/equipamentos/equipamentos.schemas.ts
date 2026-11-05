@@ -172,14 +172,36 @@ export const excluirEquipamentoSchema = {
 
 export const CriarAvaliacaoRecuperacaoSchema = {
   params: paramsIdSchema,
+  summary: "Registrar avaliação de recuperação",
+  description:
+    "Registra uma estimativa de recuperação após a triagem individual. O estado físico é capturado pelo servidor e o responsável é obtido da identidade autenticada. Avaliações repetidas para o mesmo material são permitidas.",
   body: {
     type: "object",
     required: ["material", "valorEstimado"],
     additionalProperties: false,
     properties: {
       material: { type: "string", minLength: 1, maxLength: 200 },
-      valorEstimado: { type: "number", minimum: 0},
-      observacao: {type: "string", maxLength: 1000 },
+      valorEstimado: { type: "number", minimum: 0, maximum: 9999999999.99 },
+      observacao: { type: "string", maxLength: 1000 },
+    },
+  },
+  response: {
+    201: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        id: { type: "integer" },
+        equipamentoId: { type: "integer" },
+        material: { type: "string" },
+        estadoFisicoSnapshot: { type: "string", enum: [...ESTADOS_FISICOS] },
+        valorEstimado: { type: "number" },
+        valorRealizado: { type: ["number", "null"] },
+        avaliadoEm: { type: "string", format: "date-time" },
+        realizadoEm: { type: ["string", "null"], format: "date-time" },
+        responsavel: { type: ["string", "null"] },
+        observacao: { type: ["string", "null"] },
+      },
+      required: ["id", "equipamentoId", "material", "estadoFisicoSnapshot", "valorEstimado", "valorRealizado", "avaliadoEm", "realizadoEm", "responsavel", "observacao"],
     },
   },
 } as const;

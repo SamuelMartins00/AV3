@@ -268,55 +268,78 @@ export const equipamentosRepository = {
   },
 
 criarAvaliacaoRecuperacao(
-  equipamentoId: number,
-  dados: {
-  material: string;
-  valorEstimado: number;
-  responsavel: string;
-  observacao?: string;
-},
-) {
-  return prisma.$transaction(async (tx) => {
-    const equipamento = await tx.equipamento.findUnique({
-      where: { id: equipamentoId },
-      select: {
-        id: true,
-        estadoFisico: true,
-        resultadoTriagem: true,
-      },
+    equipamentoId: number,
+    dados: {
+      material: string;
+      valorEstimado: number;
+      responsavel: string;
+      observacao?: string;
+    },
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // A leitura inicial fornece o snapshot candidato e a versão observada.
+      const equipamento = await tx.equipamento.findUnique({
+        where: { id: equipamentoId },
+        select: {
+          id: true,
+          versao: true,
+          estadoFisico: true,
+          resultadoTriagem: true,
+        },
+      });
+
+      if (!equipamento) {
+        return { tipo: "nao_encontrada" as const };
+      }
+
+      // NULL também significa que ainda não existe uma decisão de triagem.
+      if (
+        equipamento.resultadoTriagem === null ||
+        equipamento.resultadoTriagem === "AGUARDANDO_AVALIACAO"
+      ) {
+        return { tipo: "triagem_pendente" as const };
+      }
+
+      // Compare-and-swap: a atualização condicional adquire o lock da linha e
+      // avança a versão. Todas as operações que alteram triagem/estado físico
+      // usam a mesma versão; assim, somente uma delas pode vencer a corrida.
+      // O snapshot abaixo é válido porque a versão e o resultado observados
+      // precisam continuar iguais no instante em que esta escrita é serializada.
+      const serializado = await tx.equipamento.updateMany({
+        where: {
+          id: equipamentoId,
+          versao: equipamento.versao,
+          resultadoTriagem: equipamento.resultadoTriagem,
+        },
+        data: { versao: { increment: 1 } },
+      });
+
+      if (serializado.count === 0) {
+        return { tipo: "conflito" as const };
+      }
+
+      const avaliacao = await tx.avaliacaoRecuperacao.create({
+        data: {
+          equipamentoId,
+          material: dados.material,
+          estadoFisicoSnapshot: equipamento.estadoFisico,
+          valorEstimado: dados.valorEstimado,
+          responsavel: dados.responsavel,
+          observacao: dados.observacao,
+        },
+      });
+
+      await registrarJournal(tx, {
+        operacao: "CRIAR_AVALIACAO_RECUPERACAO",
+        entidade: "AvaliacaoRecuperacao",
+        dadosDepois: avaliacao,
+        usuario: dados.responsavel,
+      });
+
+      return {
+        tipo: "ok" as const,
+        valor: avaliacao,
+      };
     });
-
-    if (!equipamento) {
-      return { tipo: "nao_encontrada" as const };
-    }
-
-    if (equipamento.resultadoTriagem === "AGUARDANDO_AVALIACAO") {
-      return { tipo: "triagem_pendente" as const };
-    }
-
-    const avaliacao = await tx.avaliacaoRecuperacao.create({
-      data: {
-        equipamentoId,
-        material: dados.material,
-        estadoFisicoSnapshot: equipamento.estadoFisico,
-        valorEstimado: dados.valorEstimado,
-        responsavel: dados.responsavel,
-        observacao: dados.observacao,
-      },
-    });
-
-    await registrarJournal(tx, {
-      operacao: "CRIAR_AVALIACAO_RECUPERACAO",
-      entidade: "AvaliacaoRecuperacao",
-      dadosDepois: avaliacao,
-      usuario: dados.responsavel,
-    });
-
-    return {
-      tipo: "ok" as const,
-      valor: avaliacao,
-    };
-  });
-},
-
+  },
 };

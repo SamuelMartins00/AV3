@@ -219,6 +219,20 @@ describe("Jornada completa do greencode", () => {
     expect(pendente.status).toBe(409);
     expect(await prisma.avaliacaoRecuperacao.count({ where: { equipamentoId: eq.id } })).toBe(0);
 
+    // NULL também não representa uma triagem concluída.
+    await prisma.equipamento.update({ where: { id: eq.id }, data: { resultadoTriagem: null } });
+    const semResultado = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      { material: "Placa-mãe", valorEstimado: 250 },
+    );
+    expect(semResultado.status).toBe(409);
+    await prisma.equipamento.update({
+      where: { id: eq.id },
+      data: { resultadoTriagem: "AGUARDANDO_AVALIACAO" },
+    });
+
     const inexistente = await chamar(
       "POST",
       "/equipamentos/2147483647/avaliacoes-recuperacao",
@@ -271,6 +285,14 @@ describe("Jornada completa do greencode", () => {
       observacao: "Possibilidade de reaproveitamento",
     };
 
+    const semAutenticacao = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      undefined,
+      corpo,
+    );
+    expect(semAutenticacao.status).toBe(401);
+
     const semPermissao = await chamar(
       "POST",
       `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
@@ -278,6 +300,39 @@ describe("Jornada completa do greencode", () => {
       corpo,
     );
     expect(semPermissao.status).toBe(403);
+
+    const operadorSemPermissao = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "operador",
+      corpo,
+    );
+    expect(operadorSemPermissao.status).toBe(403);
+
+    // O cliente não pode definir responsável nem estado físico do snapshot.
+    const propriedadesProibidas = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      { ...corpo, responsavel: "admin", estadoFisicoSnapshot: "NOVO" },
+    );
+    expect(propriedadesProibidas.status).toBe(400);
+
+    const valorNegativo = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      { material: "Placa-mãe", valorEstimado: -0.01 },
+    );
+    expect(valorNegativo.status).toBe(400);
+
+    const materialVazio = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      { material: "   ", valorEstimado: 1 },
+    );
+    expect(materialVazio.status).toBe(422);
 
     const criada = await chamar(
       "POST",
@@ -309,6 +364,7 @@ describe("Jornada completa do greencode", () => {
         operacao: "CRIAR_AVALIACAO_RECUPERACAO",
         entidade: "AvaliacaoRecuperacao",
         usuarioResponsavel: "gestor",
+        dadosDepois: { path: "$.id", equals: criada.corpo.id },
       },
     });
     expect(journal).not.toBeNull();
@@ -323,6 +379,39 @@ describe("Jornada completa do greencode", () => {
     expect(repetida.status).toBe(201);
     expect(repetida.corpo.id).not.toBe(criada.corpo.id);
     expect(await prisma.avaliacaoRecuperacao.count({ where: { equipamentoId: eq.id } })).toBe(2);
+  });
+
+  it("9.2. serializa avaliação e alteração concorrente do estado físico", async () => {
+    const eq = (await chamar("GET", `/equipamentos/${ctx.equipamentos[0].id}/historico`, "gestor")).corpo.equipamento;
+    const estadoNovo = eq.estadoFisico === "BOM_ESTADO" ? "USADO_LEVE" : "DANIFICADO_LEVE";
+    const [alteracao, avaliacao] = await Promise.all([
+      chamar("PATCH", `/equipamentos/${eq.id}/estado-fisico`, "gestor", {
+        versao: eq.versao,
+        novoEstado: estadoNovo,
+        justificativa: "Teste de serialização concorrente.",
+      }),
+      chamar("POST", `/equipamentos/${eq.id}/avaliacoes-recuperacao`, "gestor", {
+        material: "Placa-mãe",
+        valorEstimado: 275,
+      }),
+    ]);
+
+    expect([200, 409]).toContain(alteracao.status);
+    expect([201, 409]).toContain(avaliacao.status);
+    expect(alteracao.status === 409 && avaliacao.status === 409).toBe(false);
+
+    if (avaliacao.status === 201) {
+      // Se ambas vencerem, a alteração necessariamente foi serializada antes
+      // da avaliação; caso contrário, a alteração baseada na versão antiga conflita.
+      expect(avaliacao.corpo.estadoFisicoSnapshot).toBe(
+        alteracao.status === 200 ? estadoNovo : eq.estadoFisico,
+      );
+    } else {
+      expect(alteracao.status).toBe(200);
+      expect(await prisma.avaliacaoRecuperacao.count({
+        where: { equipamentoId: eq.id, valorEstimado: 275 },
+      })).toBe(0);
+    }
   });
 
   it("10. movimenta, inicia o desmonte e piora o estado com justificativa", async () => {
