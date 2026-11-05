@@ -205,6 +205,7 @@ model Lote {
   transportadora      String
   statusProcessamento StatusLote    @default(RECEBIDO)
   observacoes         String?       @db.Text
+  triagemConcluidaEm  DateTime?     @db.DateTime(3)
   versao              Int           @default(1)
   equipamentos        Equipamento[]
 

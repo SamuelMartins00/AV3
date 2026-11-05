@@ -309,6 +309,7 @@ export const lotesRepository = {
           },
           data: {
             statusProcessamento: "TRIAGEM_CONCLUIDA",
+            triagemConcluidaEm: new Date(),
             versao: { increment: 1 },
           },
         });
