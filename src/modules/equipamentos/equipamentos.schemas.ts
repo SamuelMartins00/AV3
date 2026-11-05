@@ -45,6 +45,12 @@ export interface MovimentarBody {
   observacao?: string;
 }
 
+export interface CriarAvaliacaoRecuperacaoBody {
+  material: string;
+  valorEstimado: number;
+  observacao?: string;
+}
+
 export const consultarEquipamentoSchema = { params: paramsIdSchema } as const;
 
 export const listarEquipamentosSchema = {
@@ -160,6 +166,20 @@ export const excluirEquipamentoSchema = {
       type: "object",
       properties: { erro: { type: "string" } },
       required: ["erro"],
+    },
+  },
+} as const;
+
+export const CriarAvaliacaoRecuperacaoSchema = {
+  params: paramsIdSchema,
+  body: {
+    type: "object",
+    required: ["material", "valorEstimado"],
+    additionalProperties: false,
+    properties: {
+      material: { type: "string", minLength: 1, maxLength: 200 },
+      valorEstimado: { type: "number", minimum: 0},
+      observacao: {type: "string", maxLength: 1000 },
     },
   },
 } as const;

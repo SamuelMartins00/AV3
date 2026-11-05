@@ -10,12 +10,14 @@ import {
   excluirEquipamentoSchema,
   listarEquipamentosSchema,
   movimentarSchema,
+  CriarAvaliacaoRecuperacaoSchema,
   type AtualizarEstadoBody,
   type AvaliarTriagemBody,
   type BaixaDefinitivaBody,
   type AtualizarStatusBody,
   type MovimentarBody,
   type ListarEquipamentosQuery,
+  type CriarAvaliacaoRecuperacaoBody,
 } from "./equipamentos.schemas.js";
 import { EquipamentosService } from "./equipamentos.service.js";
 
@@ -60,6 +62,18 @@ export default async function equipamentosRoutes(app: FastifyInstance) {
     "/:id/triagem",
     { schema: avaliarTriagemSchema, onRequest: escrita },
     controller.avaliarTriagem,
+  );
+
+  app.post<{
+    Params: ParamsId;
+    Body: CriarAvaliacaoRecuperacaoBody;
+  }>(
+    "/:id/avaliacoes-recuperacao",
+    {
+      schema: CriarAvaliacaoRecuperacaoSchema,
+      onRequest: escrita,
+    },
+    controller.criarAvaliacaoRecuperacao,
   );
 
   app.post<{ Params: ParamsId; Body: BaixaDefinitivaBody }>(

@@ -10,6 +10,7 @@ import { MSG_CONFLITO, type ResultadoEscrita } from "../compartilhado/params.js"
 import {
   equipamentoParaResposta,
   movimentacaoParaResposta,
+  avaliacaoRecuperacaoParaResposta,
 } from "./equipamentos.mapper.js";
 import { equipamentosRepository as repo } from "./equipamentos.repository.js";
 import type {
@@ -19,6 +20,7 @@ import type {
   AtualizarStatusBody,
   MovimentarBody,
   ListarEquipamentosQuery,
+  CriarAvaliacaoRecuperacaoBody,
 } from "./equipamentos.schemas.js";
 
 function naoEncontrado(id: number): ErroDominio {
@@ -171,4 +173,44 @@ export class EquipamentosService {
       valorBase,
     };
   }
+
+  async criarAvaliacaoRecuperacao(
+  id: number,
+  corpo: CriarAvaliacaoRecuperacaoBody,
+  usuario: string,
+) {
+  const equipamento = await this.obterOuFalhar(id);
+
+  if (equipamento.resultadoTriagem === "AGUARDANDO_AVALIACAO") {
+    throw new ErroDominio(
+      "A avaliação de recuperação só pode ser realizada após a conclusão da triagem do equipamento.",
+      409,
+    );
+  }
+
+  const material = corpo.material.trim();
+  if (!material) {
+    throw new ErroDominio("O material não pode ser vazio.", 422);
+  }
+
+  const resultado = await repo.criarAvaliacaoRecuperacao(id, {
+    material,
+    valorEstimado: corpo.valorEstimado,
+    responsavel: usuario,
+    observacao: corpo.observacao?.trim() || undefined,
+  });
+
+  if (resultado.tipo === "nao_encontrada") {
+    throw naoEncontrado(id);
+  }
+
+  if (resultado.tipo === "triagem_pendente") {
+    throw new ErroDominio(
+      "A avaliação de recuperação só pode ser realizada após a conclusão da triagem do equipamento.",
+      409,
+    );
+  }
+
+  return avaliacaoRecuperacaoParaResposta(resultado.valor);
+}
 }

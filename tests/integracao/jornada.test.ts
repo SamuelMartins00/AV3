@@ -53,6 +53,7 @@ async function chamar(
 async function limparBanco() {
   // Ordem inversa das dependências entre tabelas
   await prisma.journalTransacao.deleteMany();
+  await prisma.avaliacaoRecuperacao.deleteMany();
   await prisma.movimentacao.deleteMany();
   await prisma.equipamento.deleteMany();
   await prisma.lote.deleteMany();
@@ -207,6 +208,26 @@ describe("Jornada completa do greencode", () => {
     expect(status.status).toBe(409);
   });
 
+  it("7.1. impede avaliação de recuperação antes da triagem", async () => {
+    const eq = ctx.equipamentos[0];
+    const pendente = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      { material: "Placa-mãe", valorEstimado: 250 },
+    );
+    expect(pendente.status).toBe(409);
+    expect(await prisma.avaliacaoRecuperacao.count({ where: { equipamentoId: eq.id } })).toBe(0);
+
+    const inexistente = await chamar(
+      "POST",
+      "/equipamentos/2147483647/avaliacoes-recuperacao",
+      "gestor",
+      { material: "Placa-mãe", valorEstimado: 250 },
+    );
+    expect(inexistente.status).toBe(404);
+  });
+
   it("8. a triagem conflita com versão antiga e conclui com a versão correta", async () => {
     const antiga = await chamar("POST", `/lotes/${ctx.lote.id}/triagem`, "gestor", { versao: 1 });
     expect(antiga.status).toBe(409);
@@ -240,6 +261,68 @@ describe("Jornada completa do greencode", () => {
       equipamentos: [{ tipo: "NOTEBOOK", marca: "X", modelo: "Y", anoFabricacao: 2020, estadoFisico: "NOVO", pesoQuilogramas: 1 }],
     });
     expect(adicionar.status).toBe(422);
+  });
+
+  it("9.1. cadastra avaliações após a triagem, preserva snapshot e registra auditoria", async () => {
+    const eq = ctx.equipamentos[0];
+    const corpo = {
+      material: "Placa-mãe",
+      valorEstimado: 250.5,
+      observacao: "Possibilidade de reaproveitamento",
+    };
+
+    const semPermissao = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "auditor",
+      corpo,
+    );
+    expect(semPermissao.status).toBe(403);
+
+    const criada = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      corpo,
+    );
+    expect(criada.status).toBe(201);
+    expect(criada.corpo).toMatchObject({
+      equipamentoId: eq.id,
+      material: corpo.material,
+      estadoFisicoSnapshot: eq.estadoFisico,
+      valorEstimado: corpo.valorEstimado,
+      valorRealizado: null,
+      responsavel: "gestor",
+      observacao: corpo.observacao,
+    });
+    expect(criada.corpo.avaliadoEm).toBeTruthy();
+
+    const persistida = await prisma.avaliacaoRecuperacao.findUniqueOrThrow({
+      where: { id: criada.corpo.id },
+    });
+    expect(persistida.estadoFisicoSnapshot).toBe(eq.estadoFisico);
+    expect(persistida.valorEstimado.toNumber()).toBe(250.5);
+    expect(persistida.responsavel).toBe("gestor");
+
+    const journal = await prisma.journalTransacao.findFirst({
+      where: {
+        operacao: "CRIAR_AVALIACAO_RECUPERACAO",
+        entidade: "AvaliacaoRecuperacao",
+        usuarioResponsavel: "gestor",
+      },
+    });
+    expect(journal).not.toBeNull();
+
+    // A regra permite mais de uma avaliação para o mesmo material/equipamento.
+    const repetida = await chamar(
+      "POST",
+      `/equipamentos/${eq.id}/avaliacoes-recuperacao`,
+      "gestor",
+      corpo,
+    );
+    expect(repetida.status).toBe(201);
+    expect(repetida.corpo.id).not.toBe(criada.corpo.id);
+    expect(await prisma.avaliacaoRecuperacao.count({ where: { equipamentoId: eq.id } })).toBe(2);
   });
 
   it("10. movimenta, inicia o desmonte e piora o estado com justificativa", async () => {

@@ -1,4 +1,4 @@
-import type { Equipamento, Movimentacao } from "../../generated/prisma/client.js";
+import type { Equipamento, Movimentacao, AvaliacaoRecuperacao, } from "../../generated/prisma/client.js";
 
 export function equipamentoParaResposta(eq: Equipamento) {
   return {
@@ -33,5 +33,22 @@ export function movimentacaoParaResposta(mov: Movimentacao) {
     destino: mov.destino,
     responsavel: mov.responsavel,
     observacao: mov.observacao,
+  };
+}
+
+export function avaliacaoRecuperacaoParaResposta(
+  avaliacao: AvaliacaoRecuperacao,
+) {
+  return {
+    id: avaliacao.id,
+    equipamentoId: avaliacao.equipamentoId,
+    material: avaliacao.material,
+    estadoFisicoSnapshot: avaliacao.estadoFisicoSnapshot,
+    valorEstimado: avaliacao.valorEstimado.toNumber(),
+    valorRealizado: avaliacao.valorRealizado?.toNumber() ?? null,
+    avaliadoEm: avaliacao.avaliadoEm,
+    realizadoEm: avaliacao.realizadoEm,
+    responsavel: avaliacao.responsavel,
+    observacao: avaliacao.observacao,
   };
 }

@@ -266,4 +266,57 @@ export const equipamentosRepository = {
       return { tipo: "ok" as const, valor: depois };
     });
   },
+
+criarAvaliacaoRecuperacao(
+  equipamentoId: number,
+  dados: {
+  material: string;
+  valorEstimado: number;
+  responsavel: string;
+  observacao?: string;
+},
+) {
+  return prisma.$transaction(async (tx) => {
+    const equipamento = await tx.equipamento.findUnique({
+      where: { id: equipamentoId },
+      select: {
+        id: true,
+        estadoFisico: true,
+        resultadoTriagem: true,
+      },
+    });
+
+    if (!equipamento) {
+      return { tipo: "nao_encontrada" as const };
+    }
+
+    if (equipamento.resultadoTriagem === "AGUARDANDO_AVALIACAO") {
+      return { tipo: "triagem_pendente" as const };
+    }
+
+    const avaliacao = await tx.avaliacaoRecuperacao.create({
+      data: {
+        equipamentoId,
+        material: dados.material,
+        estadoFisicoSnapshot: equipamento.estadoFisico,
+        valorEstimado: dados.valorEstimado,
+        responsavel: dados.responsavel,
+        observacao: dados.observacao,
+      },
+    });
+
+    await registrarJournal(tx, {
+      operacao: "CRIAR_AVALIACAO_RECUPERACAO",
+      entidade: "AvaliacaoRecuperacao",
+      dadosDepois: avaliacao,
+      usuario: dados.responsavel,
+    });
+
+    return {
+      tipo: "ok" as const,
+      valor: avaliacao,
+    };
+  });
+},
+
 };

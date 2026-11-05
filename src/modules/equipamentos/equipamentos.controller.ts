@@ -7,11 +7,12 @@ import type {
   AtualizarStatusBody,
   MovimentarBody,
   ListarEquipamentosQuery,
+  CriarAvaliacaoRecuperacaoBody,
 } from "./equipamentos.schemas.js";
 import type { EquipamentosService } from "./equipamentos.service.js";
 
 export class EquipamentosController {
-  constructor(private readonly service: EquipamentosService) {}
+  constructor(private readonly service: EquipamentosService) { }
 
   listar = async (request: FastifyRequest<{ Querystring: ListarEquipamentosQuery }>) => {
     return this.service.listar(request.query);
@@ -75,5 +76,21 @@ export class EquipamentosController {
       request.user.usuario,
     );
     return reply.status(201).send(movimentacao);
+  };
+
+  criarAvaliacaoRecuperacao = async (
+    request: FastifyRequest<{
+      Params: ParamsId;
+      Body: CriarAvaliacaoRecuperacaoBody;
+    }>,
+    reply: FastifyReply,
+  ) => {
+    const avaliacao = await this.service.criarAvaliacaoRecuperacao(
+      request.params.id,
+      request.body,
+      request.user.usuario,
+    );
+
+    return reply.status(201).send(avaliacao);
   };
 }
