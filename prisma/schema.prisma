@@ -266,9 +266,10 @@ model AvaliacaoRecuperacao {
   equipamentoId Int
   equipamento   Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Restrict)
 
-  material       String
-  valorEstimado  Decimal  @db.Decimal(12, 2)
-  valorRealizado Decimal? @db.Decimal(12, 2)
+  material             String
+  estadoFisicoSnapshot EstadoFisico?
+  valorEstimado        Decimal       @db.Decimal(12, 2)
+  valorRealizado       Decimal?      @db.Decimal(12, 2)
 
   avaliadoEm  DateTime  @default(now()) @db.DateTime(3)
   realizadoEm DateTime? @db.DateTime(3)
