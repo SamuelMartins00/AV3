@@ -9,6 +9,7 @@ const TAGS: Record<string, string> = {
   lotes: "Lotes",
   equipamentos: "Equipamentos",
   relatorios: "Relatórios",
+  analises: "Análises",
   configuracao: "Configuração",
   usuarios: "Usuários",
   saude: "Sistema",
@@ -49,6 +50,14 @@ const RESUMOS: Record<string, string> = {
   "POST /api/v1/equipamentos/:id/movimentacoes": "Registra movimentação do equipamento (administrador, gestor)",
   "POST /api/v1/equipamentos/:id/triagem": "Registra a avaliação individual de triagem, com justificativa e controle de versão (administrador, gestor)",
   "POST /api/v1/equipamentos/:id/baixa-definitiva": "Registra a baixa definitiva autorizada, com justificativa, controle de versão e auditoria (somente administrador)",
+
+  "POST /api/v1/analises/eficiencia": "Executa e persiste análise de eficiência operacional (administrador, auditor)",
+  "POST /api/v1/analises/rentabilidade": "Executa e persiste análise de rentabilidade por equipamento (administrador, auditor)",
+  "POST /api/v1/analises/vida-util": "Executa e persiste previsão exploratória de vida útil remanescente (administrador, auditor)",
+  "GET /api/v1/analises": "Lista resultados analíticos com filtros e paginação (administrador, auditor)",
+  "GET /api/v1/analises/:id": "Consulta um resultado analítico do histórico (administrador, auditor)",
+  "PUT /api/v1/analises/:id": "Atualiza título e descrição sem alterar o snapshot estatístico (administrador, auditor)",
+  "DELETE /api/v1/analises/:id": "Exclui permanentemente um resultado analítico (administrador, auditor)",
 
   "GET /api/v1/relatorios/organizacao/:id": "Relatório por organização e período (administrador, auditor)",
   "GET /api/v1/relatorios/status": "Relatório de equipamentos por status (administrador, auditor)",

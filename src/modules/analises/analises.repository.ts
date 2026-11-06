@@ -55,4 +55,16 @@ export const analisesRepository = {
     return prisma.resultadoAnalitico.count({ where: { tipo: filtros.tipo, organizacaoId: filtros.organizacaoId, geradoEm: { gte: inicio, lte: fim } } });
   },
   buscarPorId(id: number) { return prisma.resultadoAnalitico.findUnique({ where: { id } }); },
+  async atualizarMetadados(id: number, dados: { titulo: string; descricao: string | null }) {
+    const atualizacao = await prisma.resultadoAnalitico.updateMany({
+      where: { id },
+      data: { titulo: dados.titulo, descricao: dados.descricao },
+    });
+    if (atualizacao.count === 0) return null;
+    return prisma.resultadoAnalitico.findUnique({ where: { id } });
+  },
+  async excluir(id: number) {
+    const resultado = await prisma.resultadoAnalitico.deleteMany({ where: { id } });
+    return resultado.count > 0;
+  },
 };

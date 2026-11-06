@@ -1,7 +1,7 @@
 import { ErroDominio } from "../../dominio/erros.js";
 import { analisesRepository as repo } from "./analises.repository.js";
 import { mapearResultadoAnalitico } from "./analises.mapper.js";
-import type { ExecutarAnaliseBody, ConsultarAnalisesQuery, TipoAnalise } from "./analises.schemas.js";
+import type { ExecutarAnaliseBody, ConsultarAnalisesQuery, TipoAnalise, AtualizarAnaliseBody } from "./analises.schemas.js";
 
 const VERSAO_MODELO = "1.0.0";
 const MAX_AMOSTRA = 10000;
@@ -120,5 +120,24 @@ export class AnalisesService {
     const registro = await repo.buscarPorId(id);
     if (!registro) throw new ErroDominio(`Resultado analítico ${id} não encontrado.`, 404);
     return mapearResultadoAnalitico(registro);
+  }
+
+  async atualizar(id: number, entrada: AtualizarAnaliseBody) {
+    const titulo = entrada.titulo.trim();
+    if (titulo.length < 3 || titulo.length > 160) {
+      throw new ErroDominio("O título deve possuir entre 3 e 160 caracteres.", 400);
+    }
+    const descricao = entrada.descricao?.trim() || null;
+    if (descricao && descricao.length > 2000) {
+      throw new ErroDominio("A descrição deve possuir no máximo 2000 caracteres.", 400);
+    }
+    const registro = await repo.atualizarMetadados(id, { titulo, descricao });
+    if (!registro) throw new ErroDominio(`Resultado analítico ${id} não encontrado.`, 404);
+    return mapearResultadoAnalitico(registro);
+  }
+
+  async excluir(id: number) {
+    const excluido = await repo.excluir(id);
+    if (!excluido) throw new ErroDominio(`Resultado analítico ${id} não encontrado.`, 404);
   }
 }

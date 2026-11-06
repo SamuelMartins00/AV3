@@ -1084,3 +1084,58 @@ describe("Exclusão segura de lotes e equipamentos", () => {
     })).toBe(1);
   });
 });
+
+describe("Histórico analítico", () => {
+  let analiseId = 0;
+
+  it("cria registro de análise para validar consulta, atualização e exclusão", async () => {
+    const registro = await prisma.resultadoAnalitico.create({
+      data: {
+        organizacaoId: ctx.organizacaoId,
+        tipo: "EFICIENCIA_OPERACIONAL",
+        titulo: "Análise de teste",
+        descricao: "Descrição original",
+        dados: { amostra: 3, mediaHoras: 12 },
+        parametros: { limiteAmostra: 100 },
+        versaoModelo: "teste",
+      },
+    });
+    analiseId = registro.id;
+
+    const consulta = await chamar("GET", `/analises/${analiseId}`, "admin");
+    expect(consulta.status).toBe(200);
+    expect(consulta.corpo.dados).toEqual({ amostra: 3, mediaHoras: 12 });
+
+    const atualizacao = await chamar("PUT", `/analises/${analiseId}`, "admin", {
+      titulo: "Título atualizado",
+      descricao: "Descrição atualizada",
+    });
+    expect(atualizacao.status).toBe(200);
+    expect(atualizacao.corpo).toMatchObject({
+      titulo: "Título atualizado",
+      descricao: "Descrição atualizada",
+      dados: { amostra: 3, mediaHoras: 12 },
+      parametros: { limiteAmostra: 100 },
+    });
+
+    const lista = await chamar("GET", `/analises?tipo=EFICIENCIA_OPERACIONAL&pagina=1&limite=10`, "auditor");
+    expect(lista.status).toBe(200);
+    expect(lista.corpo.resultados.some((item: any) => item.id === analiseId)).toBe(true);
+  });
+
+  it("exclui o registro e retorna 404 nas consultas posteriores", async () => {
+    const exclusao = await chamar("DELETE", `/analises/${analiseId}`, "admin");
+    expect(exclusao.status).toBe(204);
+    expect(exclusao.corpo).toBeNull();
+
+    const consulta = await chamar("GET", `/analises/${analiseId}`, "admin");
+    expect(consulta.status).toBe(404);
+    expect((await chamar("DELETE", `/analises/${analiseId}`, "admin")).status).toBe(404);
+  });
+
+  it("valida o contrato de atualização e mantém controle de acesso", async () => {
+    const semTitulo = await chamar("PUT", `/analises/${analiseId}`, "admin", { descricao: "Sem título" });
+    expect(semTitulo.status).toBe(400);
+    expect((await chamar("PUT", `/analises/${analiseId}`, "gestor", { titulo: "Não permitido" })).status).toBe(403);
+  });
+});
