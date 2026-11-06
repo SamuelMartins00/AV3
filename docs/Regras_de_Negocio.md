@@ -56,7 +56,7 @@
 - Não existe unicidade por par equipamento/material: avaliações repetidas para o mesmo material e equipamento são permitidas e preservadas como registros históricos independentes.
 - A criação da avaliação e o evento `CRIAR_AVALIACAO_RECUPERACAO` no journal são confirmados na mesma transação. Falha na auditoria reverte a criação.
 - A operação usa compare-and-swap sobre `Equipamento.versao`: a versão e o resultado de triagem observados precisam continuar iguais na escrita condicional, que incrementa a versão antes da criação. Isso serializa o cadastro contra operações concorrentes de triagem e alteração do estado físico que também respeitam a versão. Conflito retorna HTTP 409; o cliente deve recarregar o equipamento e decidir se tenta novamente.
-- Equipamento inexistente retorna HTTP 404; corpo inválido ou com propriedade adicional é rejeitado pelo schema Fastify (HTTP 400); material vazio após normalização é erro de domínio HTTP 422; ausência de autenticação retorna 401 e papel sem permissão retorna 403.
+- Equipamento inexistente retorna HTTP 404; corpo inválido é rejeitado pelo schema Fastify (HTTP 400). Propriedades adicionais são detectadas em `preValidation`, antes da validação automática, para impedir que a configuração `removeAdditional` do Ajv as descarte silenciosamente; a resposta também é HTTP 400. Material vazio após normalização é erro de domínio HTTP 422; ausência de autenticação retorna 401 e papel sem permissão retorna 403.
 
 ## 5. Movimentações e rastreabilidade
 
