@@ -1,6 +1,7 @@
 import Fastify, { type FastifyError } from "fastify";
 import { prisma } from "./config/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import analisesRoutes from "./modules/analises/analises.routes.js";
 import auditoriaRoutes from "./modules/auditoria/auditoria.routes.js";
 import configuracaoRoutes from "./modules/configuracao/configuracao.routes.js";
 import equipamentosRoutes from "./modules/equipamentos/equipamentos.routes.js";
@@ -40,6 +41,7 @@ export function buildApp(opcoes: { logger?: boolean } = {}) {
   app.register(lotesRoutes, { prefix: "/api/v1/lotes" });
   app.register(equipamentosRoutes, { prefix: "/api/v1/equipamentos" });
   app.register(relatoriosRoutes, { prefix: "/api/v1/relatorios" });
+  app.register(analisesRoutes, { prefix: "/api/v1/analises" });
   app.register(configuracaoRoutes, { prefix: "/api/v1/configuracao" });
   app.register(usuariosRoutes, { prefix: "/api/v1/usuarios" });
 
