@@ -17,3 +17,11 @@ declare module "fastify" {
     ) => (request: FastifyRequest) => Promise<void>;
   }
 }   
+declare module "fastify" {
+  interface FastifyRequest {
+    apiKey: { id: number; organizacaoId: number; permissoes: string[] };
+  }
+  interface FastifyInstance {
+    autenticarApiKey: (request: FastifyRequest) => Promise<void>;
+  }
+}

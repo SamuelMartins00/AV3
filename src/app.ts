@@ -9,11 +9,13 @@ import lotesRoutes from "./modules/lotes/lotes.routes.js";
 import organizacoesRoutes from "./modules/organizacoes/organizacoes.routes.js";
 import relatoriosRoutes from "./modules/relatorios/relatorios.routes.js";
 import usuariosRoutes from "./modules/usuarios/usuarios.routes.js";
+import chavesApiRoutes from "./modules/chaves-api/chaves-api.routes.js";
+import publicaRoutes from "./modules/publica/publica.routes.js";
 import authPlugin from "./plugins/auth.js";
 import swaggerPlugin from "./plugins/swagger.js";
 
 export function buildApp(opcoes: { logger?: boolean } = {}) {
-  const app = Fastify({ logger: opcoes.logger ?? true });
+  const app = Fastify({ logger: opcoes.logger === false ? false : { redact: ["req.headers.x-api-key"] } });
 
   app.setErrorHandler((erro: FastifyError, request, reply) => {
     const status =
@@ -36,6 +38,8 @@ export function buildApp(opcoes: { logger?: boolean } = {}) {
   app.register(authPlugin);
   app.register(swaggerPlugin);
   app.register(authRoutes, { prefix: "/api/v1/auth" });
+  app.register(chavesApiRoutes, { prefix: "/api/v1/chaves-api" });
+  app.register(publicaRoutes, { prefix: "/api/v1/public" });
   app.register(auditoriaRoutes, { prefix: "/api/v1/auditoria" });
   app.register(organizacoesRoutes, { prefix: "/api/v1/organizacoes" });
   app.register(lotesRoutes, { prefix: "/api/v1/lotes" });

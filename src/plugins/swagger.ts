@@ -13,6 +13,8 @@ const TAGS: Record<string, string> = {
   configuracao: "Configuração",
   usuarios: "Usuários",
   saude: "Sistema",
+  public: "API Pública v1",
+  "chaves-api": "Chaves de API",
 };
 
 // Resumo de cada rota, com os papéis que podem usá-la
@@ -88,12 +90,13 @@ export default fp(async (app) => {
       info: {
         title: "Logística API",
         description:
-          "Logística reversa de equipamentos eletrônicos. Faça login em POST /api/v1/auth/login, copie o accessToken e use o botão Authorize.",
+          "API interna JWT e API pública versionada para parceiros. Rotas /api/v1/public exigem x-api-key; rotas administrativas usam JWT. Chaves são gerenciadas em /api/v1/chaves-api.",
         version: "1.0.0",
       },
       components: {
         securitySchemes: {
           bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+          apiKeyAuth: { type: "apiKey", in: "header", name: "x-api-key", description: "Segredo emitido uma única vez na criação/rotação." },
         },
       },
     },
@@ -114,9 +117,9 @@ export default fp(async (app) => {
       return {
         schema: {
           ...schema,
-          summary: RESUMOS[chave],
-          tags: [TAGS[segmento] ?? segmento],
-          security: ROTAS_PUBLICAS.has(chave) ? [] : [{ bearerAuth: [] }],
+          summary: RESUMOS[chave] ?? schema.summary,
+          tags: TAGS[segmento] ? [TAGS[segmento]] : (schema.tags ?? [segmento]),
+          security: ROTAS_PUBLICAS.has(chave) ? [] : (caminho.startsWith("/api/v1/public/") ? [{ apiKeyAuth: [] }] : [{ bearerAuth: [] }]),
         },
         url: url.length > 1 ? url.replace(/\/$/, "") : url,
       };

@@ -1085,7 +1085,7 @@ describe("Exclusão segura de lotes e equipamentos", () => {
   });
 });
 
-describe("Histórico analítico", () => {
+describe("CRUD do histórico analítico", () => {
   let analiseId = 0;
 
   it("cria registro de análise para validar consulta, atualização e exclusão", async () => {

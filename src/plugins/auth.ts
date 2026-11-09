@@ -1,4 +1,5 @@
 import fastifyJwt from "@fastify/jwt";
+import { createHash } from "node:crypto";
 import fp from "fastify-plugin";
 import type { FastifyRequest } from "fastify";
 import { prisma } from "../config/prisma.js";
@@ -28,6 +29,22 @@ export default fp(async (app) => {
     if (atual.senhaAlteracaoObrigatoria && !request.url.split("?")[0]?.endsWith("/auth/alterar-senha")) {
       throw new ErroDominio("É obrigatório alterar a senha antes de continuar", 403);
     }
+  });
+
+  app.decorate("autenticarApiKey", async (request: FastifyRequest) => {
+    // API pública aceita exclusivamente x-api-key; JWT interno nunca é fallback.
+    const raw = request.headers["x-api-key"];
+    if (typeof raw !== "string" || raw.length < 30 || raw.length > 200) {
+      throw new ErroDominio("API key ausente ou inválida", 401);
+    }
+    const hashChave = createHash("sha256").update(raw).digest("hex");
+    const chave = await prisma.chaveApi.findUnique({ where: { hashChave }, select: { id: true, organizacaoId: true, permissoes: true, ativa: true, expiraEm: true, organizacao: { select: { ativo: true } } } });
+    if (!chave || !chave.ativa || !chave.organizacao.ativo || (chave.expiraEm && chave.expiraEm <= new Date())) {
+      throw new ErroDominio("API key inválida, revogada ou expirada", 401);
+    }
+    request.apiKey = { id: chave.id, organizacaoId: chave.organizacaoId, permissoes: Array.isArray(chave.permissoes) ? chave.permissoes.filter((v): v is string => typeof v === "string") : [] };
+    // Não registrar o segredo nem o hash em logs/journal.
+    await prisma.chaveApi.update({ where: { id: chave.id }, data: { ultimoUsoEm: new Date() } });
   });
 
   app.decorate("exigirPapel", (...papeis: Papel[]) => async (request: FastifyRequest) => {
