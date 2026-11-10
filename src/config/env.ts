@@ -24,4 +24,44 @@ export const env = {
   jwtAccessExpira: process.env.JWT_ACCESS_EXPIRES ?? "15m",
   refreshTtlMinutos: inteiroPositivo("REFRESH_TTL_MINUTES", 30),
   bcryptCusto: inteiroPositivo("BCRYPT_COST", 10),
+  redisUrl: urlRedis("REDIS_URL", "redis://127.0.0.1:6379/0"),
+  redisPrefix: prefixoRedis(),
+  workerConcurrency: inteiroPositivo("WORKER_CONCURRENCY", 3),
+  taskMaxAttempts: inteiroPositivo("TASK_MAX_ATTEMPTS", 3),
+  taskBackoffMs: inteiroPositivo("TASK_BACKOFF_MS", 5000),
+  taskStaleMs: inteiroPositivo("TASK_STALE_MS", 300000),
+  taskResultTtlHours: inteiroPositivo("TASK_RESULT_TTL_HOURS", 168),
 } as const;
+
+function urlRedis(nome: string, padrao: string): string {
+  const valor = process.env[nome] ?? padrao;
+  let url: URL;
+  try {
+    url = new URL(valor);
+  } catch {
+    throw new Error(`${nome} deve ser uma URL Redis válida`);
+  }
+  if (url.protocol !== "redis:" && url.protocol !== "rediss:") {
+    throw new Error(`${nome} deve utilizar o protocolo redis:// ou rediss://`);
+  }
+  if (!url.hostname) throw new Error(`${nome} deve informar o host do Redis`);
+  if (url.port && (!Number.isInteger(Number(url.port)) || Number(url.port) < 1 || Number(url.port) > 65535)) {
+    throw new Error(`${nome} possui uma porta inválida`);
+  }
+  const database = url.pathname.slice(1);
+  if (database && !/^\d+$/.test(database)) {
+    throw new Error(`${nome} deve usar um índice de banco Redis numérico no caminho`);
+  }
+  return valor;
+}
+
+
+function prefixoRedis(): string {
+  const valor = process.env.REDIS_PREFIX ?? "greencode";
+  // O BullMQ proíbe ":" no nome da fila. Mantemos o prefixo
+  // simples para formar nomes previsíveis, como "greencode-tarefas".
+  if (!/^[A-Za-z0-9_-]{1,50}$/.test(valor) || valor.includes(":")) {
+    throw new Error("REDIS_PREFIX deve conter apenas letras, números, hífen ou underscore (máximo de 50 caracteres)");
+  }
+  return valor;
+}

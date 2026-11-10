@@ -1,6 +1,7 @@
 import { buildApp } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./config/prisma.js";
+import { filaTarefas } from "./modules/tarefas/tarefas.queue.js";
 
 const app = buildApp();
 let encerrando = false;
@@ -12,6 +13,7 @@ async function encerrar(sinal: string): Promise<void> {
   app.log.info(`Sinal ${sinal} recebido, encerrando o servidor...`);
   try {
     await app.close();
+    await filaTarefas.close();
     await prisma.$disconnect();
     process.exit(0);
   } catch (erro) {

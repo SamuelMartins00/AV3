@@ -51,7 +51,7 @@ const resultadoResponse = {
 
 export const executarAnaliseSchema = {
   body,
-  response: { 201: resultadoResponse, 400: { description: "Parâmetros ou período inválido." }, 401: { description: "Não autenticado." }, 403: { description: "Papel sem permissão." } },
+  response: { 202: { type: "object", properties: { id: { type: "string", format: "uuid" }, status: { type: "string" }, statusUrl: { type: "string" } }, required: ["id", "status", "statusUrl"] }, 400: { description: "Parâmetros ou período inválido." }, 401: { description: "Não autenticado." }, 403: { description: "Papel sem permissão." } },
 } as const;
 
 export const consultarAnalisesSchema = {

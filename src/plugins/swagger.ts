@@ -15,6 +15,7 @@ const TAGS: Record<string, string> = {
   saude: "Sistema",
   public: "API Pública v1",
   "chaves-api": "Chaves de API",
+  tarefas: "Tarefas assíncronas",
 };
 
 // Resumo de cada rota, com os papéis que podem usá-la
@@ -73,6 +74,13 @@ const RESUMOS: Record<string, string> = {
   "DELETE /api/v1/usuarios/:id": "Exclui uma conta, revoga suas sessões e preserva o journal (administrador)",
 
   "GET /api/v1/saude": "Verifica o servidor e a conexão com o banco",
+
+  "POST /api/v1/tarefas": "Cria e enfileira uma tarefa assíncrona",
+  "GET /api/v1/tarefas": "Lista tarefas com filtros e paginação",
+  "GET /api/v1/tarefas/:id": "Consulta estado, tentativas e resultado de uma tarefa",
+  "PATCH /api/v1/tarefas/:id": "Atualiza parâmetros ou cancela uma tarefa pendente",
+  "DELETE /api/v1/tarefas/:id": "Remove uma tarefa em estado terminal",
+  "GET /api/v1/tarefas/:id/download": "Baixa o resultado JSON privado de uma tarefa concluída",
 };
 
 const ROTAS_PUBLICAS = new Set([
@@ -126,5 +134,20 @@ export default fp(async (app) => {
     },
   });
 
-  await app.register(swaggerUi, { routePrefix: "/docs" });
+  // Documento OpenAPI em uma URL estável e explícita. O Swagger UI usa
+  // essa URL em vez de depender do endpoint implícito /docs/json.
+  app.get(
+    "/openapi.json",
+    { schema: { hide: true } },
+    async () => app.swagger(),
+  );
+
+  await app.register(swaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: {
+      url: "/openapi.json",
+      docExpansion: "list",
+      deepLinking: true,
+    },
+  });
 });

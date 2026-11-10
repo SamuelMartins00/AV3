@@ -376,6 +376,8 @@ model TarefaAssincrona {
 
   parametros     Json?
   resultado      Json?
+  chaveIdempotencia String? @unique @db.VarChar(191)
+  resultadoExpiraEm DateTime? @db.DateTime(3)
   arquivoUrl     String? @db.Text
   formatoArquivo String?
 
@@ -392,6 +394,7 @@ model TarefaAssincrona {
   @@index([status, criadoEm])
   @@index([organizacaoId, criadoEm])
   @@index([chaveApiId])
+  @@index([status, resultadoExpiraEm])
 }
 
 // ---------- Auditoria e configuração ----------

@@ -1,6 +1,20 @@
 # MySQL 8 para desenvolvimento e para validar o sistema no Linux.
 # Uso: docker compose up -d   (e docker compose down para parar)
 services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: greencode-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   db:
     image: mysql:8.0
     container_name: logistica-db
@@ -20,4 +34,5 @@ services:
       retries: 20
 
 volumes:
+  redisdata:
   dbdata:
