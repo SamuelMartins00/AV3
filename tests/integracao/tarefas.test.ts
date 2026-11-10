@@ -117,7 +117,7 @@ describe("tarefas assíncronas com MySQL e Redis de teste", () => {
     const resposta = await app.inject({ method: "GET", url: "/openapi.json" });
     expect(resposta.statusCode).toBe(200);
     const documento = resposta.json();
-    expect(documento.openapi).toMatch(/^3\\.0\\./);
+    expect(documento.openapi).toMatch(/^3\.0\./);
     expect(documento.paths["/api/v1/tarefas"]).toBeTruthy();
     expect(documento.paths["/api/v1/tarefas/{id}"]).toBeTruthy();
     expect(documento.paths["/api/v1/tarefas/{id}"].patch).toBeTruthy();

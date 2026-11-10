@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { prisma } from "../../config/prisma.js";
 import { ErroDominio } from "../../dominio/erros.js";
 import { env } from "../../config/env.js";
@@ -21,9 +22,11 @@ function chaveIdempotente(escopo: string, chave?: string): string | null {
 }
 
 function conferirIdempotencia(existente: { tipo: string; organizacaoId: number | null; parametros: unknown }, input: CriarTarefaInput) {
+  // Comparação estrutural: objetos JSON equivalentes não dependem da ordem
+  // das propriedades retornadas pelo MySQL/Prisma.
   const mesmoPayload = existente.tipo === input.tipo &&
     existente.organizacaoId === (input.organizacaoId ?? null) &&
-    JSON.stringify(existente.parametros ?? {}) === JSON.stringify(input.parametros);
+    isDeepStrictEqual(existente.parametros ?? {}, input.parametros ?? {});
   if (!mesmoPayload) {
     throw new ErroDominio("Idempotency-Key já utilizada com parâmetros diferentes", 409);
   }

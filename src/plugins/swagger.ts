@@ -109,27 +109,44 @@ export default fp(async (app) => {
       },
     },
     transform: ({ schema, url, route }) => {
+      // Algumas rotas internas/automáticas podem chegar sem schema completo.
+      // Mantemos essas rotas fora do documento em vez de acessar propriedades ausentes.
+      const esquema = schema && typeof schema === "object" ? schema : {};
+      if (esquema.hide) return { schema: esquema, url };
+
       const metodo = String(
-        Array.isArray(route.method) ? route.method[0] : route.method,
+        Array.isArray(route?.method) ? route.method[0] : (route?.method ?? "GET"),
       ).toUpperCase();
 
-      // O Fastify cria uma rota HEAD para cada GET
+      // O Fastify cria uma rota HEAD para cada GET.
       if (metodo === "HEAD") {
-        return { schema: { ...schema, hide: true }, url };
+        return { schema: { ...esquema, hide: true }, url };
       }
 
-      const caminho = route.url.length > 1 ? route.url.replace(/\/$/, "") : route.url;
+      const rotaUrl = typeof route?.url === "string"
+        ? route.url
+        : (typeof url === "string" ? url : "/");
+      const caminho = rotaUrl.length > 1 && rotaUrl.endsWith("/")
+        ? rotaUrl.slice(0, -1)
+        : rotaUrl;
       const chave = `${metodo} ${caminho}`;
       const segmento = caminho.split("/")[3] ?? "saude";
+      const urlNormalizada = typeof url === "string" && url.length > 1 && url.endsWith("/")
+        ? url.slice(0, -1)
+        : url;
 
       return {
         schema: {
-          ...schema,
-          summary: RESUMOS[chave] ?? schema.summary,
-          tags: TAGS[segmento] ? [TAGS[segmento]] : (schema.tags ?? [segmento]),
-          security: ROTAS_PUBLICAS.has(chave) ? [] : (caminho.startsWith("/api/v1/public/") ? [{ apiKeyAuth: [] }] : [{ bearerAuth: [] }]),
+          ...esquema,
+          summary: RESUMOS[chave] ?? esquema.summary,
+          tags: TAGS[segmento] ? [TAGS[segmento]] : (esquema.tags ?? [segmento]),
+          security: ROTAS_PUBLICAS.has(chave)
+            ? []
+            : (caminho.startsWith("/api/v1/public/")
+              ? [{ apiKeyAuth: [] }]
+              : [{ bearerAuth: [] }]),
         },
-        url: url.length > 1 ? url.replace(/\/$/, "") : url,
+        url: urlNormalizada,
       };
     },
   });
