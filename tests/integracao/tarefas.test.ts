@@ -93,6 +93,7 @@ describe("tarefas assíncronas com MySQL e Redis de teste", () => {
 
     const concluida = await aguardarEstado(primeira.json().id, "CONCLUIDA");
     expect(concluida.resultado).not.toBeNull();
+    expect(concluida.duracaoMs).toEqual(expect.any(Number));
     const polling = await requisicao("GET", `/tarefas/${concluida.id}`);
     expect(polling.statusCode).toBe(200);
     expect(polling.json().status).toBe("CONCLUIDA");
@@ -111,6 +112,7 @@ describe("tarefas assíncronas com MySQL e Redis de teste", () => {
     const falhou = await aguardarEstado(criada.json().id, "FALHOU");
     expect(falhou.tentativas).toBe(3);
     expect(falhou.erro).toBeTruthy();
+    expect(falhou.duracaoMs).toEqual(expect.any(Number));
   });
 
   it("publica um documento OpenAPI válido com as rotas CRUD de tarefas", async () => {

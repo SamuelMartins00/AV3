@@ -387,6 +387,7 @@ model TarefaAssincrona {
   erro        String?   @db.Text
   iniciadaEm  DateTime? @db.DateTime(3)
   concluidaEm DateTime? @db.DateTime(3)
+  duracaoMs   Int?
 
   criadoEm     DateTime @default(now()) @db.DateTime(3)
   atualizadoEm DateTime @updatedAt @db.DateTime(3)

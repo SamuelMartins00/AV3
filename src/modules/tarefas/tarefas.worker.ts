@@ -70,6 +70,7 @@ async function processar(job: Job<Payload>) {
 
   const tarefa = await prisma.tarefaAssincrona.findUnique({ where: { id } });
   if (!tarefa || tarefa.status !== "PROCESSANDO") return;
+  const inicioExecucao = Date.now();
 
   // Heartbeat evita que a reconciliação re-enfileire uma tarefa legítima e demorada.
   const heartbeat = setInterval(() => {
@@ -92,6 +93,7 @@ async function processar(job: Job<Payload>) {
         resultadoExpiraEm: expira,
         erro: null,
         concluidaEm: agora,
+        duracaoMs: Date.now() - inicioExecucao,
         atualizadoEm: agora,
       },
     });
@@ -105,6 +107,7 @@ async function processar(job: Job<Payload>) {
         status: terminal ? "FALHOU" : "PENDENTE",
         tentativas: job.attemptsMade + 1,
         erro: mensagem.slice(0, 4000),
+        duracaoMs: Date.now() - inicioExecucao,
         ...(terminal ? { concluidaEm: new Date() } : {}),
       },
     });

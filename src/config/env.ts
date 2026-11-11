@@ -31,6 +31,9 @@ export const env = {
   taskBackoffMs: inteiroPositivo("TASK_BACKOFF_MS", 5000),
   taskStaleMs: inteiroPositivo("TASK_STALE_MS", 300000),
   taskResultTtlHours: inteiroPositivo("TASK_RESULT_TTL_HOURS", 168),
+  analyticsScheduleEnabled: process.env.ANALYTICS_SCHEDULE_ENABLED === "true",
+  analyticsScheduleCron: process.env.ANALYTICS_SCHEDULE_CRON ?? "0 2 * * *",
+  analyticsScheduleTimezone: timezoneAnalitico(),
 } as const;
 
 function urlRedis(nome: string, padrao: string): string {
@@ -62,6 +65,16 @@ function prefixoRedis(): string {
   // simples para formar nomes previsíveis, como "greencode-tarefas".
   if (!/^[A-Za-z0-9_-]{1,50}$/.test(valor) || valor.includes(":")) {
     throw new Error("REDIS_PREFIX deve conter apenas letras, números, hífen ou underscore (máximo de 50 caracteres)");
+  }
+  return valor;
+}
+
+function timezoneAnalitico(): string {
+  const valor = process.env.ANALYTICS_SCHEDULE_TIMEZONE ?? "America/Sao_Paulo";
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: valor });
+  } catch {
+    throw new Error("ANALYTICS_SCHEDULE_TIMEZONE deve ser um fuso IANA válido (ex.: America/Sao_Paulo)");
   }
   return valor;
 }
