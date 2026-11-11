@@ -41,6 +41,18 @@ export default async function equipamentosRoutes(app: FastifyInstance) {
   );
 
   app.get<{ Params: ParamsId }>(
+    "/:id",
+    { schema: consultarEquipamentoSchema, onRequest: leitura },
+    controller.consultar,
+  );
+
+  app.get<{ Params: ParamsId }>(
+    "/:id/avaliacoes-recuperacao",
+    { schema: consultarEquipamentoSchema, onRequest: leitura },
+    controller.listarAvaliacoesRecuperacao,
+  );
+
+  app.get<{ Params: ParamsId }>(
     "/:id/historico",
     { schema: consultarEquipamentoSchema, onRequest: leitura },
     controller.historico,

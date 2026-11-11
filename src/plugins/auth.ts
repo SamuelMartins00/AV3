@@ -12,13 +12,13 @@ export default fp(async (app) => {
 
   app.decorate("autenticar", async (request: FastifyRequest) => {
     try { await request.jwtVerify(); }
-    catch { throw new ErroDominio("Token ausente, inválido ou expirado", 401); }
+    catch { throw new ErroDominio("Token ausente, inválido ou expirado", 401, "TOKEN_INVALIDO"); }
 
     const id = Number(request.user.sub);
-    if (!Number.isSafeInteger(id) || id <= 0) throw new ErroDominio("Token inválido", 401);
+    if (!Number.isSafeInteger(id) || id <= 0) throw new ErroDominio("Token inválido", 401, "TOKEN_INVALIDO");
     const atual = await prisma.usuario.findUnique({ where: { id }, select: { id: true, usuario: true, papel: true, ativo: true, nomeExibicao: true, senhaAlteracaoObrigatoria: true, versaoSeguranca: true } });
     if (!atual || !atual.ativo || request.user.versaoSeguranca !== atual.versaoSeguranca) {
-      throw new ErroDominio("Sessão inválida ou revogada", 401);
+      throw new ErroDominio("Sessão inválida ou revogada", 401, "SESSAO_REVOGADA");
     }
 
     // Nunca confiar no papel ou login desatualizados do JWT.
@@ -27,7 +27,7 @@ export default fp(async (app) => {
     request.user.nomeExibicao = atual.nomeExibicao;
 
     if (atual.senhaAlteracaoObrigatoria && !request.url.split("?")[0]?.endsWith("/auth/alterar-senha")) {
-      throw new ErroDominio("É obrigatório alterar a senha antes de continuar", 403);
+      throw new ErroDominio("É obrigatório alterar a senha antes de continuar", 403, "SENHA_ALTERACAO_OBRIGATORIA");
     }
   });
 
@@ -48,6 +48,6 @@ export default fp(async (app) => {
   });
 
   app.decorate("exigirPapel", (...papeis: Papel[]) => async (request: FastifyRequest) => {
-    if (!papeis.includes(request.user.papel)) throw new ErroDominio("Sem permissão para esta ação", 403);
+    if (!papeis.includes(request.user.papel)) throw new ErroDominio("Sem permissão para esta ação", 403, "SEM_PERMISSAO");
   });
 });

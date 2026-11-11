@@ -9,7 +9,7 @@ import { TIPOS_EQUIPAMENTO, ESTADOS_FISICOS } from "../../dominio/enums.js";
 import { createHash } from "node:crypto";
 
 export default async function publicaRoutes(app: FastifyInstance) {
-  await app.register(rateLimit, { global: true, max: 120, timeWindow: "1 minute", keyGenerator: (request) => { const presented = request.headers["x-api-key"]; return typeof presented === "string" ? `api-key:${createHash("sha256").update(presented).digest("hex")}` : request.ip; }, errorResponseBuilder: () => ({ erro: "Limite de requisições excedido" }) });
+  await app.register(rateLimit, { global: true, max: 120, timeWindow: "1 minute", keyGenerator: (request) => { const presented = request.headers["x-api-key"]; return typeof presented === "string" ? `api-key:${createHash("sha256").update(presented).digest("hex")}` : request.ip; }, errorResponseBuilder: (_request, contexto) => ({ statusCode: contexto.statusCode, message: "Limite de requisições excedido", codigo: "LIMITE_REQUISICOES" }) });
   app.addHook("onRequest", app.autenticarApiKey);
   const exigir = (p: PermissaoChaveApi) => async (req: any) => { if (!req.apiKey.permissoes.includes(p)) throw new ErroDominio("A chave não possui a permissão necessária", 403); };
 

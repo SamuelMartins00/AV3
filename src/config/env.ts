@@ -31,10 +31,23 @@ export const env = {
   taskBackoffMs: inteiroPositivo("TASK_BACKOFF_MS", 5000),
   taskStaleMs: inteiroPositivo("TASK_STALE_MS", 300000),
   taskResultTtlHours: inteiroPositivo("TASK_RESULT_TTL_HOURS", 168),
+  loginRateLimitMax: inteiroPositivo("LOGIN_RATE_LIMIT_MAX", 10),
+  corsOrigins: listaOrigens(),
   analyticsScheduleEnabled: process.env.ANALYTICS_SCHEDULE_ENABLED === "true",
   analyticsScheduleCron: process.env.ANALYTICS_SCHEDULE_CRON ?? "0 2 * * *",
   analyticsScheduleTimezone: timezoneAnalitico(),
 } as const;
+
+function listaOrigens(): string[] {
+  const bruto = process.env.CORS_ORIGINS ?? "";
+  const origens = bruto.split(",").map((o) => o.trim()).filter(Boolean);
+  for (const origem of origens) {
+    let url: URL;
+    try { url = new URL(origem); } catch { throw new Error(`CORS_ORIGINS contém uma origem inválida: ${origem}`); }
+    if (origem !== url.origin) throw new Error(`CORS_ORIGINS deve conter apenas origens (esquema://host[:porta]), sem caminho: ${origem}`);
+  }
+  return origens;
+}
 
 function urlRedis(nome: string, padrao: string): string {
   const valor = process.env[nome] ?? padrao;

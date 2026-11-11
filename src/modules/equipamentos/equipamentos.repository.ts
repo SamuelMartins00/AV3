@@ -18,6 +18,13 @@ export const equipamentosRepository = {
     return prisma.equipamento.findUnique({ where: { id } });
   },
 
+  listarAvaliacoesRecuperacao(equipamentoId: number) {
+    return prisma.avaliacaoRecuperacao.findMany({
+      where: { equipamentoId },
+      orderBy: [{ avaliadoEm: "desc" }, { id: "desc" }],
+    });
+  },
+
   excluir(id: number, usuario: string) {
     return prisma.$transaction(async (tx) => {
       const antes = await tx.equipamento.findUnique({ where: { id } });

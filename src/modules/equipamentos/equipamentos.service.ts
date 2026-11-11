@@ -44,6 +44,16 @@ export class EquipamentosService {
     return equipamentos.map(equipamentoParaResposta);
   }
 
+  async consultar(id: number) {
+    return equipamentoParaResposta(await this.obterOuFalhar(id));
+  }
+
+  async listarAvaliacoesRecuperacao(id: number) {
+    await this.obterOuFalhar(id);
+    const avaliacoes = await repo.listarAvaliacoesRecuperacao(id);
+    return avaliacoes.map(avaliacaoRecuperacaoParaResposta);
+  }
+
   async rastrear(id: number) {
     const eq = await repo.buscarComHistorico(id);
     if (!eq) throw naoEncontrado(id);

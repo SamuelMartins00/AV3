@@ -3,7 +3,7 @@
 API REST de logística reversa de equipamentos eletrônicos. A AV3 amplia a base AV2 com análises, integração pública por chave de API e processamento assíncrono por BullMQ/Redis.
 
 Documentação funcional: [`docs/Regras_de_Negocio.md`](docs/Regras_de_Negocio.md).  
-Arquitetura, fórmulas, segurança, fila e limitações: [`docs/Documento_Tecnico_AV3.md`](docs/Documento_Tecnico_AV3.md).  
+Arquitetura, fórmulas, segurança, fila e limitações: [`docs/Documento_Tecnico.md`](docs/Documento_Tecnico.md). 
 Decisões arquiteturais anteriores: [`docs/DECISOES.md`](docs/DECISOES.md).
 
 ## 1. Pré-requisitos
@@ -55,6 +55,8 @@ cp .env.example .env
 | `JWT_ACCESS_EXPIRES` | Expiração do access token |
 | `REFRESH_TTL_MINUTES` | Validade do refresh token |
 | `BCRYPT_COST` | Custo do bcrypt |
+| `LOGIN_RATE_LIMIT_MAX` | Tentativas por minuto no login (por IP + usuário); o refresh aceita 6x esse valor (mínimo 60) por IP. Padrão 10 |
+| `CORS_ORIGINS` | Origens permitidas para CORS, separadas por vírgula. Vazio = CORS desabilitado (padrão) |
 
 `TEST_DATABASE_URL` e `TEST_REDIS_URL` são usados pela configuração da suíte de integração; não substitua os bancos de desenvolvimento por bancos de teste.
 

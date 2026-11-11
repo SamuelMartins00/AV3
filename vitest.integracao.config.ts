@@ -30,6 +30,7 @@ export default defineConfig({
       TASK_BACKOFF_MS: "50",
       TASK_STALE_MS: "1000",
       BCRYPT_COST: "4",
+      LOGIN_RATE_LIMIT_MAX: "100000",
       REFRESH_TTL_MINUTES: "30",
     },
   },

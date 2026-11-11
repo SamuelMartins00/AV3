@@ -19,6 +19,12 @@ export interface ParTokens {
   tipo: "Bearer";
 }
 
+export interface RespostaLogin extends ParTokens {
+  // Quando true, o front deve levar o usuário direto à troca de senha:
+  // qualquer outra rota autenticada responde 403 (SENHA_ALTERACAO_OBRIGATORIA).
+  senhaAlteracaoObrigatoria: boolean;
+}
+
 // Hash usado quando o usuário não existe, para que o tempo de resposta
 // seja parecido e não revele quais usuários estão cadastrados.
 const HASH_FALSO = bcrypt.hashSync("senha-falsa", env.bcryptCusto);
@@ -61,7 +67,7 @@ export class AuthService {
     });
   }
 
-  async login(usuario: string, senha: string): Promise<ParTokens> {
+  async login(usuario: string, senha: string): Promise<RespostaLogin> {
     const registro = await authRepository.buscarUsuarioPorNome(usuario);
     const senhaConfere = await bcrypt.compare(
       senha,
@@ -70,7 +76,7 @@ export class AuthService {
 
     if (!registro || !senhaConfere || !registro.ativo) {
       await this.registrarEvento("LOGIN_FALHA", registro?.usuario ?? "desconhecido", { resultado: "FALHA" });
-      throw new ErroDominio("Usuário ou senha inválidos", 401);
+      throw new ErroDominio("Usuário ou senha inválidos", 401, "CREDENCIAIS_INVALIDAS");
     }
 
     const refreshToken = gerarRefreshToken();
@@ -79,11 +85,14 @@ export class AuthService {
     );
     if (!criouSessao) {
       await this.registrarEvento("LOGIN_FALHA", registro?.usuario ?? "desconhecido", { resultado: "FALHA" });
-      throw new ErroDominio("Usuário ou senha inválidos", 401);
+      throw new ErroDominio("Usuário ou senha inválidos", 401, "CREDENCIAIS_INVALIDAS");
     }
 
     await this.registrarEvento("LOGIN_SUCESSO", registro.usuario, { resultado: "SUCESSO" });
-    return this.montarPar(registro.id, registro.usuario, registro.papel, refreshToken, registro.versaoSeguranca);
+    return {
+      ...this.montarPar(registro.id, registro.usuario, registro.papel, refreshToken, registro.versaoSeguranca),
+      senhaAlteracaoObrigatoria: registro.senhaAlteracaoObrigatoria,
+    };
   }
 
   async renovar(refreshToken: string): Promise<ParTokens> {

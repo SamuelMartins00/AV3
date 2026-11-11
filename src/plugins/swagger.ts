@@ -20,7 +20,7 @@ const TAGS: Record<string, string> = {
 
 // Resumo de cada rota, com os papéis que podem usá-la
 const RESUMOS: Record<string, string> = {
-  "POST /api/v1/auth/login": "Autentica e devolve o access token e o refresh token",
+  "POST /api/v1/auth/login": "Autentica e devolve os tokens e senhaAlteracaoObrigatoria; limitado por tentativas",
   "POST /api/v1/auth/refresh": "Troca o refresh token por um novo par de tokens",
   "POST /api/v1/auth/logout": "Revoga o refresh token (encerra a sessão)",
   "POST /api/v1/auth/alterar-senha": "Altera a própria senha (revoga as sessões)",
@@ -30,6 +30,7 @@ const RESUMOS: Record<string, string> = {
 
   "POST /api/v1/organizacoes": "Cadastra organização, com contrato opcional (administrador, operador)",
   "GET /api/v1/organizacoes": "Lista organizações paginadas com filtros de razão social, CNPJ e status (administrador, operador)",
+  "GET /api/v1/organizacoes/opcoes": "Lista mínima (id, razão social, situação) para seletores; inclui gestor e auditor",
   "GET /api/v1/organizacoes/:id": "Consulta uma organização (administrador, operador)",
   "PATCH /api/v1/organizacoes/:id": "Altera CNPJ/endereço ou desativa, com controle de versão (administrador, operador)",
   "POST /api/v1/organizacoes/:id/reativar": "Reativa organização com contrato vigente e controle de versão (administrador, operador)",
@@ -45,6 +46,8 @@ const RESUMOS: Record<string, string> = {
   "POST /api/v1/lotes/:id/equipamentos": "Adiciona equipamentos a um lote aberto (administrador, gestor)",
   "POST /api/v1/lotes/:id/triagem": "Conclui a triagem do lote, com controle de versão (administrador, gestor)",
 
+  "GET /api/v1/equipamentos/:id": "Consulta um equipamento, com a versão atual para controle de concorrência (administrador, gestor, auditor)",
+  "GET /api/v1/equipamentos/:id/avaliacoes-recuperacao": "Lista as avaliações de recuperação do equipamento, da mais recente para a mais antiga (administrador, gestor, auditor)",
   "GET /api/v1/equipamentos/:id/historico": "Rastreabilidade: equipamento e movimentações (administrador, gestor, auditor)",
   "DELETE /api/v1/equipamentos/:id": "Exclui equipamento sem histórico operacional (administrador, gestor)",
   "GET /api/v1/equipamentos/:id/depreciacao": "Calcula a depreciação acumulada (administrador, gestor)",

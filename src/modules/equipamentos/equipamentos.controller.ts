@@ -18,6 +18,14 @@ export class EquipamentosController {
     return this.service.listar(request.query);
   };
 
+  consultar = async (request: FastifyRequest<{ Params: ParamsId }>) => {
+    return this.service.consultar(request.params.id);
+  };
+
+  listarAvaliacoesRecuperacao = async (request: FastifyRequest<{ Params: ParamsId }>) => {
+    return this.service.listarAvaliacoesRecuperacao(request.params.id);
+  };
+
   historico = async (request: FastifyRequest<{ Params: ParamsId }>) => {
     return this.service.rastrear(request.params.id);
   };

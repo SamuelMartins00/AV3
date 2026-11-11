@@ -2,6 +2,8 @@ export class ErroDominio extends Error {
   constructor(
     mensagem: string,
     public readonly statusCode: number = 422,
+    // Código estável e legível por máquina (opcional).
+    public readonly codigo?: string,
   ) {
     super(mensagem);
     this.name = "ErroDominio";
