@@ -1,0 +1,6 @@
+import type { ReactNode } from 'react';
+export interface DataColumn<T> { key: string; header: string; render: (row: T) => ReactNode; className?: string }
+interface DataTableProps<T> { columns: DataColumn<T>[]; rows: T[]; getRowKey: (row: T) => string | number; emptyMessage?: string }
+export function DataTable<T>({ columns, rows, getRowKey, emptyMessage = 'Nenhum registro encontrado.' }: DataTableProps<T>) {
+  return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 text-left text-sm"><thead className="bg-slate-50"><tr>{columns.map((column) => <th key={column.key} scope="col" className={`whitespace-nowrap px-4 py-3 font-semibold text-slate-600 ${column.className ?? ''}`}>{column.header}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{rows.length ? rows.map((row) => <tr key={getRowKey(row)} className="hover:bg-slate-50/70">{columns.map((column) => <td key={column.key} className={`px-4 py-3 text-slate-700 ${column.className ?? ''}`}>{column.render(row)}</td>)}</tr>) : <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500">{emptyMessage}</td></tr>}</tbody></table></div></div>;
+}

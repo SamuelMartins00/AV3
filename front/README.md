@@ -73,3 +73,26 @@ npm test
 npm run typecheck
 npm run build
 ```
+
+## Estrutura visual e navegação 
+
+A aplicação possui layout autenticado com sidebar responsiva, cabeçalho de usuário, navegação filtrada pelo papel e rotas protegidas. Os papéis controlam somente a apresentação e a navegação; a API continua sendo responsável pela autorização efetiva.
+
+### Papéis e módulos
+
+- `ADMINISTRADOR`: todos os módulos.
+- `OPERADOR_CADASTRO`: organizações e perfil.
+- `GESTOR_ALMOXARIFADO`: lotes, equipamentos e perfil.
+- `AUDITOR`: equipamentos, relatórios, análises, tarefas, auditoria e perfil.
+
+As páginas dos módulos ainda são placeholders intencionais; as funcionalidades serão implementadas nas fases correspondentes. Não há dashboard nesta fase.
+
+### Componentes compartilhados
+
+- `components/ui/form-field.tsx`: campo de formulário com estados de erro e dica.
+- `components/ui/data-table.tsx`: tabela genérica tipada e estado vazio.
+- `components/ui/modal.tsx`: modal acessível com fechamento por Escape e clique externo.
+- `components/ui/confirm-dialog.tsx`: confirmação de ações.
+- `app/toast-provider.tsx`: notificações de sucesso, erro e informação.
+
+A rota `/403` apresenta a página de acesso negado. Rotas de módulos não permitidos também exibem essa página. Rotas inexistentes exibem a página 404 dentro da área autenticada.

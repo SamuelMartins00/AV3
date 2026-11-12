@@ -4,6 +4,7 @@ import { authApi } from '../api';
 import { useAuth } from '../auth-context';
 import { useUpdateUserProfile, useUserProfile } from '../hooks';
 import { getAuthErrorMessage } from '../components/auth-error';
+import { useToast } from '../../../app/toast-provider';
 
 const roleLabels: Record<string, string> = {
   ADMINISTRADOR: 'Administrador',
@@ -14,6 +15,7 @@ const roleLabels: Record<string, string> = {
 
 export function ProfilePage() {
   const { passwordChanged, user, reloadUser, logout } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const profileQuery = useUserProfile();
   const updateProfile = useUpdateUserProfile();
@@ -36,6 +38,7 @@ export function ProfilePage() {
       setNomeExibicao(updated.nomeExibicao);
       await reloadUser();
       setProfileMessage('Nome de exibição atualizado.');
+      toast('Perfil atualizado com sucesso.', 'success');
     } catch (cause) { setProfileError(getAuthErrorMessage(cause, 'Não foi possível atualizar o perfil.')); }
   }
 
@@ -54,7 +57,7 @@ export function ProfilePage() {
   }
 
   async function handleLogout() {
-    try { await logout(); } finally { navigate('/login', { replace: true }); }
+    try { await logout(); toast('Sessão encerrada com sucesso.', 'success'); } finally { navigate('/login', { replace: true }); }
   }
 
   if (profileQuery.isLoading) return <p className="text-sm text-slate-500">Carregando perfil…</p>;
