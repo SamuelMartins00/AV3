@@ -1,0 +1,10 @@
+export type TipoEquipamento = 'COMPUTADOR_MESA' | 'NOTEBOOK' | 'MONITOR' | 'IMPRESSORA' | 'SERVIDOR' | 'ROTEADOR' | 'CABO_ESTRUTURADO' | 'FONTE_ALIMENTACAO';
+export type EstadoFisico = 'NOVO' | 'BOM_ESTADO' | 'USADO_LEVE' | 'USADO_MODERADO' | 'DANIFICADO_LEVE' | 'DANIFICADO_GRAVE' | 'INSERVIVEL';
+export type ResultadoTriagem = 'AGUARDANDO_AVALIACAO' | 'APROVADO_PARA_DESMONTAGEM' | 'DESTINADO_AO_REAPROVEITAMENTO_DE_PECAS' | 'DESTINADO_A_RECICLAGEM' | 'DESTINADO_AO_DESCARTE_SEGURO';
+export type StatusRastreamento = 'AGUARDANDO_TRIAGEM' | 'EM_TRIAGEM' | 'AGUARDANDO_DESMONTE' | 'EM_DESMONTE' | 'PECAS_REAPROVEITADAS' | 'MATERIAL_RECICLAVEL' | 'DESCARTE_SEGURO' | 'BAIXA_DEFINITIVA';
+export interface Equipamento { id: number; codigoBarrasInterno: string; loteId: number; posicaoNoLote: number; tipo: TipoEquipamento; marca: string; modelo: string; anoFabricacao: number; estadoFisico: EstadoFisico; statusRastreamento: StatusRastreamento; resultadoTriagem: ResultadoTriagem; triagemResponsavel: string | null; triagemEm: string | null; triagemJustificativa: string | null; baixadoEm: string | null; baixaResponsavel: string | null; baixaJustificativa: string | null; pesoQuilogramas: number; versao: number }
+export interface Movimentacao { id: number; equipamentoId: number; dataHora: string; origem: string; destino: string; responsavel: string; observacao: string | null }
+export interface HistoricoEquipamento { equipamento: Equipamento; movimentacoes: Movimentacao[] }
+export interface AvaliacaoRecuperacao { id: number; equipamentoId: number; material: string; estadoFisicoSnapshot: EstadoFisico; valorEstimado: number; valorRealizado: number | null; avaliadoEm: string; realizadoEm: string | null; responsavel: string | null; observacao: string | null }
+export interface Depreciacao { equipamentoId: number; depreciacaoAcumulada: number; coeficiente: number; valorBase: number }
+export interface FiltrosEquipamentos { loteId?: number; codigoBarrasInterno?: string; statusRastreamento?: StatusRastreamento; resultadoTriagem?: ResultadoTriagem; tipo?: TipoEquipamento }

@@ -7,6 +7,9 @@ import { HomePage } from '../features/home/pages/home-page';
 import { NotFoundPage } from '../features/home/pages/not-found-page';
 import { ForbiddenPage } from '../features/home/pages/forbidden-page';
 import { ModulePlaceholderPage } from '../features/shared/module-placeholder-page';
+import { OrganizacoesPage } from '../features/organizacoes/pages/organizacoes-page';
+import { LotesPage } from '../features/lotes/pages/lotes-page';
+import { EquipamentosPage } from '../features/equipamentos/pages/equipamentos-page';
 import type { Papel } from '../features/auth/types';
 import { RequireAuth, RequireGuest, RequirePasswordChange, RequireRoles } from './guards';
 
@@ -30,7 +33,7 @@ export const router = createBrowserRouter([
     { index: true, element: <HomePage /> },
     { path: 'perfil', element: <ProfilePage /> },
     { path: '403', element: <ForbiddenPage /> },
-    ...modules.map(({ path, roles }) => ({ path, element: <RequireRoles roles={roles}><ModulePlaceholderPage /></RequireRoles> })),
+    ...modules.map(({ path, roles }) => ({ path, element: <RequireRoles roles={roles}>{path === 'organizacoes' ? <OrganizacoesPage /> : path === 'lotes' ? <LotesPage /> : path === 'equipamentos' ? <EquipamentosPage /> : <ModulePlaceholderPage />}</RequireRoles> })),
     { path: '*', element: <NotFoundPage /> },
   ] }] },
   { path: '*', element: <Navigate to="/" replace /> },
