@@ -94,6 +94,10 @@ O plugin público configura 120 requisições por minuto. A chave do limitador �
 
 O logger Fastify mascara o cabeçalho `x-api-key`. Não registrar segredos, JWTs ou hashes em logs. Usar TLS em implantação externa, guardar `.env` fora do controle de versão, gerar `JWT_SECRET` forte e rotacionar chaves expostas. O rate limit em memória/instância não deve ser tratado como quota global distribuída entre múltiplas instâncias sem confirmar o armazenamento compartilhado do plugin.
 
+### 3.5 CORS para clientes web
+
+CORS é habilitado somente quando `CORS_ORIGINS` contém uma lista de origens exatas. O preflight permite `Authorization`, `Content-Type`, `Idempotency-Key` e `x-api-key`; este último é necessário para parceiros que consumam a API pública diretamente de navegadores. `Content-Disposition` é exposto para que o frontend possa ler o nome do arquivo em respostas de download. Em produção, configure somente as origens confiáveis do painel e dos clientes web autorizados; não habilite origem curinga.
+
 ## 4. BullMQ, Redis e worker
 
 ### 4.1 Responsabilidades

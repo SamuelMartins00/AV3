@@ -46,7 +46,7 @@ export function buildApp(opcoes: { logger?: boolean } = {}) {
     app.register(cors, {
       origin: env.corsOrigins,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Authorization", "Content-Type", "Idempotency-Key"],
+      allowedHeaders: ["Authorization", "Content-Type", "Idempotency-Key", "x-api-key"],
       exposedHeaders: ["Content-Disposition"],
       credentials: false,
       maxAge: 600,

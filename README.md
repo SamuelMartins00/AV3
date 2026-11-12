@@ -60,6 +60,8 @@ cp .env.example .env
 
 `TEST_DATABASE_URL` e `TEST_REDIS_URL` são usados pela configuração da suíte de integração; não substitua os bancos de desenvolvimento por bancos de teste.
 
+Para desenvolvimento do frontend em outra origem (por exemplo, Vite em `http://localhost:5173`), configure `CORS_ORIGINS` com a origem exata do frontend. A API aceita `Authorization`, `Content-Type`, `Idempotency-Key` e `x-api-key` no preflight CORS. O cabeçalho `x-api-key` é necessário para chamadas da API pública feitas diretamente pelo navegador. Não use curingas em produção; liste apenas origens confiáveis.
+
 ## 3. MySQL e Redis
 
 Crie os bancos `logistica_db` e `logistica_db_test` com o usuário MySQL local configurado nas URLs. O usuário pode ser `root` no ambiente local se essa for a política do ambiente; use credenciais próprias e privilégio mínimo em ambientes compartilhados/produção.
