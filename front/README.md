@@ -65,3 +65,11 @@ src/
 ├── styles/       # estilos globais e Tailwind
 └── types/        # tipos compartilhados
 ```
+
+### Testes
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
