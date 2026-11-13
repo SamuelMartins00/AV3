@@ -1,0 +1,10 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { api } from '../../../lib/api';
+import { tarefasApi } from '../api';
+vi.mock('../../../lib/api', () => ({ api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() } }));
+const mocked = vi.mocked(api) as unknown as { get: ReturnType<typeof vi.fn>; post: ReturnType<typeof vi.fn>; patch: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> };
+describe('tarefasApi', () => { beforeEach(() => vi.clearAllMocks());
+ it('envia filtros e paginação', async () => { mocked.get.mockResolvedValueOnce({ data: { dados: [], pagina: 1 } }); await tarefasApi.listar({ pagina: 1, limite: 20, status: 'PENDENTE' }); expect(mocked.get).toHaveBeenCalledWith('/api/v1/tarefas', { params: { pagina: 1, limite: 20, status: 'PENDENTE' } }); });
+ it('envia chave de idempotência no header', async () => { mocked.post.mockResolvedValueOnce({ data: { id: 'uuid' } }); await tarefasApi.criar({ tipo: 'ANALISE_EFICIENCIA' }, 'uuid-key'); expect(mocked.post).toHaveBeenCalledWith('/api/v1/tarefas', { tipo: 'ANALISE_EFICIENCIA' }, { headers: { 'Idempotency-Key': 'uuid-key' } }); });
+ it('solicita download como blob', async () => { mocked.get.mockResolvedValueOnce({ data: new Blob() }); await tarefasApi.baixar('abc'); expect(mocked.get).toHaveBeenCalledWith('/api/v1/tarefas/abc/download', { responseType: 'blob' }); });
+});

@@ -1,0 +1,3 @@
+import {beforeEach,describe,expect,it,vi,type Mock} from 'vitest';import {api} from '../../../lib/api';import {configuracaoApi} from '../api';
+vi.mock('../../../lib/api',()=>({api:{get:vi.fn(),patch:vi.fn()}}));const mocked=api as unknown as {get:Mock;post:Mock;patch:Mock;put:Mock;delete:Mock};beforeEach(()=>vi.clearAllMocks());
+describe('configuracaoApi',()=>{it('envia alíquota como fração decimal',async()=>{mocked.patch.mockResolvedValueOnce({data:{aliquotaImpostos:.15}} as never);await configuracaoApi.atualizar({aliquotaImpostos:.15});expect(mocked.patch).toHaveBeenCalledWith('/api/v1/configuracao',{aliquotaImpostos:.15});});});

@@ -1,0 +1,3 @@
+import {beforeEach,describe,expect,it,vi,type Mock} from 'vitest';import {api} from '../../../lib/api';import {auditoriaApi} from '../api';
+vi.mock('../../../lib/api',()=>({api:{get:vi.fn()}}));const mocked=api as unknown as {get:Mock;post:Mock;patch:Mock;put:Mock;delete:Mock};beforeEach(()=>vi.clearAllMocks());
+describe('auditoriaApi',()=>{it('envia filtros e paginação ao journal',async()=>{mocked.get.mockResolvedValueOnce({data:{pagina:2,limite:20,registros:[]}} as never);await auditoriaApi.listar({pagina:2,limite:20,entidade:'Usuario'});expect(mocked.get).toHaveBeenCalledWith('/api/v1/auditoria/journal',{params:{pagina:2,limite:20,entidade:'Usuario'}});});});

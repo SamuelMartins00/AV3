@@ -10,6 +10,13 @@ import { ModulePlaceholderPage } from '../features/shared/module-placeholder-pag
 import { OrganizacoesPage } from '../features/organizacoes/pages/organizacoes-page';
 import { LotesPage } from '../features/lotes/pages/lotes-page';
 import { EquipamentosPage } from '../features/equipamentos/pages/equipamentos-page';
+import { UsuariosPage } from '../features/usuarios/pages/usuarios-page';
+import { ConfiguracaoPage } from '../features/configuracao/pages/configuracao-page';
+import { AuditoriaPage } from '../features/auditoria/pages/auditoria-page';
+import { ChavesApiPage } from '../features/chaves-api/pages/chaves-api-page';
+import { TarefasPage } from '../features/tarefas/pages/tarefas-page';
+import { AnalisesPage } from '../features/analises/pages/analises-page';
+import { RelatoriosPage } from '../features/relatorios/pages/relatorios-page';
 import type { Papel } from '../features/auth/types';
 import { RequireAuth, RequireGuest, RequirePasswordChange, RequireRoles } from './guards';
 
@@ -33,7 +40,7 @@ export const router = createBrowserRouter([
     { index: true, element: <HomePage /> },
     { path: 'perfil', element: <ProfilePage /> },
     { path: '403', element: <ForbiddenPage /> },
-    ...modules.map(({ path, roles }) => ({ path, element: <RequireRoles roles={roles}>{path === 'organizacoes' ? <OrganizacoesPage /> : path === 'lotes' ? <LotesPage /> : path === 'equipamentos' ? <EquipamentosPage /> : <ModulePlaceholderPage />}</RequireRoles> })),
+    ...modules.map(({ path, roles }) => ({ path, element: <RequireRoles roles={roles}>{path === 'organizacoes' ? <OrganizacoesPage /> : path === 'lotes' ? <LotesPage /> : path === 'equipamentos' ? <EquipamentosPage /> : path === 'usuarios' ? <UsuariosPage /> : path === 'configuracao' ? <ConfiguracaoPage /> : path === 'auditoria' ? <AuditoriaPage /> : path === 'chaves-api' ? <ChavesApiPage /> : path === 'tarefas' ? <TarefasPage /> : path === 'analises' ? <AnalisesPage /> : path === 'relatorios' ? <RelatoriosPage /> : <ModulePlaceholderPage />}</RequireRoles> })),
     { path: '*', element: <NotFoundPage /> },
   ] }] },
   { path: '*', element: <Navigate to="/" replace /> },

@@ -68,10 +68,6 @@ src/
 
 Cada funcionalidade poderá concentrar seus contratos, chamadas HTTP, schemas, hooks e componentes dentro da própria pasta em `features/`.
 
-## Escopo atual
-
-Esta entrega reúne as Fases 1 (fundação) e 2 (autenticação). Contém a estrutura React/Vite, configuração do Axios, TanStack Query, React Router, Tailwind CSS, proxy de desenvolvimento, login, restauração de sessão, troca de senha e perfil. Os módulos operacionais permanecem para as próximas fases.
-
 ## Autenticação 
 
 O fluxo de autenticação utiliza os endpoints internos `/auth/*` e `/usuarios/me`:
@@ -107,7 +103,6 @@ A aplicação possui layout autenticado com sidebar responsiva, cabeçalho de us
 - `GESTOR_ALMOXARIFADO`: lotes, equipamentos e perfil.
 - `AUDITOR`: equipamentos, relatórios, análises, tarefas, auditoria e perfil.
 
-As páginas dos módulos ainda são placeholders intencionais; as funcionalidades serão implementadas nas fases correspondentes. Não há dashboard nesta fase.
 
 ### Componentes compartilhados
 
@@ -125,7 +120,7 @@ O módulo `/organizacoes` integra `GET/POST/PATCH /api/v1/organizacoes`, busca p
 
 As operações que exigem concorrência otimista enviam a versão atual do registro/contrato. O cadastro de contrato não envia versão. A duração da renovação automática é obrigatória quando essa opção é ativada. O encerramento retroativo só é exibido para `ADMINISTRADOR`, além de continuar protegido pelo backend. O hook `useOrganizacaoOpcoes` consome `GET /api/v1/organizacoes/opcoes` para seletores em módulos que precisem referenciar organizações sem expor CNPJ, contatos ou contrato.
 
-## Fluxo operacional principal (fase 5)
+## Fluxo operacional principal 
 
 O módulo `/lotes` integra listagem e filtros por período, organização, situação e nota fiscal; cadastro, detalhe, inclusão de equipamentos, conclusão de triagem coletiva e solicitação de exclusão. O seletor de organização consome `GET /api/v1/organizacoes/opcoes`. A API de lotes não expõe paginação, portanto a tela apresenta a coleção retornada pelo servidor sem simular páginas.
 
@@ -136,3 +131,32 @@ Os payloads de avaliação de recuperação contêm exclusivamente `material`, `
 As mutações com concorrência otimista usam `versao` lida do detalhe atualizado. A movimentação e o cadastro de avaliação não enviam versão, conforme os schemas do backend. O frontend não implementa a máquina de estados: solicita as operações e apresenta as respostas/erros do servidor. A autorização da baixa definitiva e das demais operações permanece no backend; os papéis no frontend controlam somente a experiência de navegação.
 
 Testes adicionados em `features/lotes/__tests__` e `features/equipamentos/__tests__` cobrem rotas, filtros, payloads, versões e validações de dados.
+
+## Telas administrativas
+
+- **Usuários** (`/usuarios`): listagem paginada e filtros por papel/situação; cadastro, consulta, edição de nome/papel, redefinição de senha, desativação, reativação e exclusão. Criação/promoção de administrador abre reautenticação e envia `senhaAtualAdmin`. A redefinição administrativa de senha avisa sobre a troca obrigatória no próximo login.
+- **Configuração** (`/configuracao`): leitura e atualização dos parâmetros globais. A alíquota e o coeficiente são enviados como frações entre 0 e 1 (por exemplo, `0.15` para 15%).
+- **Auditoria** (`/auditoria`): consulta paginada do journal, filtros por entidade/operação/responsável/período e modal com snapshots antes/depois. A tela não cria nem exibe identificador de entidade não retornado pela API.
+- **Chaves de API** (`/chaves-api`): listagem, consulta, criação, revogação e rotação. O segredo de criação/rotação permanece somente em estado local efêmero para apresentação única; não passa por React Query, cache, URL ou logs. A tela oferece as quatro permissões ativas da API pública e identifica as demais como reservadas.
+
+As operações administrativas continuam sujeitas à autorização e validação do backend. As telas não substituem as regras de segurança do servidor.
+
+## Tarefas, análises e relatórios
+
+- **Tarefas** (`/tarefas`): listagem paginada com filtros por tipo/status, detalhe com atualização automática em intervalo progressivo de 2 a 4 segundos, cancelamento somente em `PENDENTE`, exclusão somente em estados terminais e download privado por Axios com `responseType: 'blob'`. HTTP 409 é apresentado como resultado ainda indisponível e HTTP 410 como resultado expirado. A tela identifica tentativas que retornaram a `PENDENTE` com erro e orienta verificar Redis e worker quando uma tarefa permanece pendente por mais de cinco minutos.
+- **Análises** (`/analises`): execução de eficiência, rentabilidade e vida útil via endpoints próprios. Cada submissão gera uma nova `Idempotency-Key` UUID e recebe HTTP 202; o identificador inicial é o da tarefa, acompanhado em `/tarefas`. O histórico é consultado separadamente em `/analises`, permitindo manter os registros analíticos mesmo após expirar o payload temporário da tarefa. O período aceita filtros opcionais e valida o limite de 366 dias quando as duas datas são informadas. Valores nulos e amostras insuficientes são apresentados explicitamente; as limitações de vida útil são exibidas literalmente como recebidas. A análise de rentabilidade mantém estimativas e valores realizados como métricas independentes, sem apresentar cálculo de lucro ou retorno sobre investimento.
+- **Relatórios** (`/relatorios`): geração síncrona por organização, status e financeiro, além de solicitação assíncrona pelo endpoint de tarefas (`GERACAO_RELATORIO`). O relatório financeiro é identificado como resumo de valores contratuais e a observação textual retornada pela API é exibida sem reescrita.
+
+Testes dos contratos HTTP e validações desta fase estão em `features/tarefas/__tests__`, `features/analises/__tests__` e `features/relatorios/__tests__`.
+
+
+## Dashboard por papel 
+
+A página inicial apresenta painéis específicos para `ADMINISTRADOR`, `OPERADOR_CADASTRO`, `GESTOR_ALMOXARIFADO` e `AUDITOR`. Não existe endpoint agregado de dashboard: cada visualização consulta somente os endpoints dos módulos que o respectivo papel já pode acessar. O backend permanece como autoridade final de autorização.
+
+- **Administrador:** organizações e contratos, lotes, equipamentos, tarefas e histórico analítico.
+- **Operador:** organizações e situação dos contratos.
+- **Gestor:** lotes e equipamentos por status.
+- **Auditor:** tarefas, resultados analíticos, relatórios por status e registros recentes do journal.
+
+Os gráficos utilizam Recharts. As distribuições calculadas no cliente são contagens dos registros retornados pelos endpoints; onde a API informa paginação, o painel identifica quando a distribuição se refere aos registros carregados. Os indicadores de análise apresentam os campos persistidos pela análise: eficiência (média, mínimo, máximo, amostra e status), rentabilidade (médias estimadas por grupo e quantidade de avaliações) e vida útil (previsões, status, R² e limitações textuais do backend). Valores ausentes permanecem como não disponíveis; não são convertidos em zero nos resultados analíticos.

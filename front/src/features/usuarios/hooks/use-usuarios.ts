@@ -1,0 +1,8 @@
+import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
+import {usuariosApi,type UsuariosFiltros} from '../api';
+import {useToast} from '../../../app/toast-provider';
+import type {Papel} from '../../auth/types';
+export const usuariosKeys={all:['usuarios'] as const,list:(f:UsuariosFiltros)=>['usuarios','list',f] as const,detail:(id:number)=>['usuarios','detail',id] as const};
+export function useUsuarios(f:UsuariosFiltros){return useQuery({queryKey:usuariosKeys.list(f),queryFn:()=>usuariosApi.listar(f),placeholderData:p=>p});}
+export function useUsuario(id:number|null){return useQuery({queryKey:usuariosKeys.detail(id??0),queryFn:()=>usuariosApi.buscar(id!),enabled:id!==null});}
+export function useUsuariosMutations(){const qc=useQueryClient();const {toast}=useToast();const invalidate=()=>qc.invalidateQueries({queryKey:usuariosKeys.all});const opts={onSuccess:async()=>{await invalidate();toast('Operação realizada com sucesso.','success');},onError:(e:unknown)=>{const d=(e as {response?:{data?:{message?:string}}})?.response?.data;toast(d?.message??'Não foi possível concluir a operação.','error');}};return {criar:useMutation({mutationFn:usuariosApi.criar,...opts}),atualizar:useMutation({mutationFn:(v:{id:number;nomeExibicao?:string;papel?:Papel;senhaAtualAdmin?:string})=>{const {id,...body}=v;return usuariosApi.atualizar(id,body)},...opts}),senha:useMutation({mutationFn:({id,senhaNova}:{id:number;senhaNova:string})=>usuariosApi.redefinirSenha(id,senhaNova),...opts}),desativar:useMutation({mutationFn:usuariosApi.desativar,...opts}),reativar:useMutation({mutationFn:usuariosApi.reativar,...opts}),excluir:useMutation({mutationFn:usuariosApi.excluir,...opts})};}
