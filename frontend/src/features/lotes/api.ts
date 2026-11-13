@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { CriarLote, FiltrosLotes, Lote, LoteResumo, DadosEquipamentoLote } from './types';
-const base = '/api/v1/lotes';
+const base = '/lotes';
 export const lotesApi = {
   listar: async (filtros: FiltrosLotes) => (await api.get<LoteResumo[]>(base, { params: filtros })).data,
   buscar: async (id: number) => (await api.get<Lote>(`${base}/${id}`)).data,

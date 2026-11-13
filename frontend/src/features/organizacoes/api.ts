@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { CriarOrganizacao, DadosContrato, FiltrosOrganizacoes, Organizacao, OrganizacaoOpcao, OrganizacoesResponse } from './types';
-const base = '/api/v1/organizacoes';
+const base = '/organizacoes';
 export const organizacoesApi = {
   listar: async (filtros: FiltrosOrganizacoes) => (await api.get<OrganizacoesResponse>(base, { params: filtros })).data,
   opcoes: async (todas = false) => (await api.get<OrganizacaoOpcao[]>(`${base}/opcoes`, { params: todas ? { todas: true } : {} })).data,

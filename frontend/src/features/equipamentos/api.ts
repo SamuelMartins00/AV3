@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { AvaliacaoRecuperacao, Depreciacao, Equipamento, FiltrosEquipamentos, HistoricoEquipamento, EstadoFisico, ResultadoTriagem, StatusRastreamento } from './types';
-const base = '/api/v1/equipamentos';
+const base = '/equipamentos';
 export const equipamentosApi = {
   listar: async (filtros: FiltrosEquipamentos) => (await api.get<Equipamento[]>(base, { params: filtros })).data,
   buscar: async (id: number) => (await api.get<Equipamento>(`${base}/${id}`)).data,

@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { CriarTarefa, FiltrosTarefas, TarefaDetalhe, TarefasResponse } from './types';
-const base = '/api/v1/tarefas';
+const base = '/tarefas';
 export const tarefasApi = {
   listar: async (filtros: FiltrosTarefas) => (await api.get<TarefasResponse>(base, { params: filtros })).data,
   buscar: async (id: string) => (await api.get<TarefaDetalhe>(`${base}/${id}`)).data,

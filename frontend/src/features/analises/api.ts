@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { AnalisesResponse, ExecutarAnalise, FiltrosAnalises, ResultadoAnalise } from './types';
-const base = '/api/v1/analises';
+const base = '/analises';
 export const analisesApi = {
   executar: async (tipo: 'eficiencia' | 'rentabilidade' | 'vida-util', dados: ExecutarAnalise, idempotencyKey: string) => (await api.post<{ id: string; status: string; statusUrl: string }>(`${base}/${tipo}`, dados, { headers: { 'Idempotency-Key': idempotencyKey } })).data,
   listar: async (filtros: FiltrosAnalises) => (await api.get<AnalisesResponse>(base, { params: filtros })).data,
