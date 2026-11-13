@@ -16,10 +16,19 @@ function inteiroPositivo(nome: string, padrao: number): number {
   return valor;
 }
 
+function booleanoOpcional(nome: string): boolean | undefined {
+  const valor = process.env[nome]?.trim().toLowerCase();
+  if (!valor) return undefined;
+  if (valor === "true") return true;
+  if (valor === "false") return false;
+  throw new Error(`${nome} deve ser "true" ou "false"`);
+}
+
 export const env = {
   port: inteiroPositivo("PORT", 3000),
   host: process.env.HOST ?? "127.0.0.1",
   databaseUrl: obrigatoria("DATABASE_URL"),
+  dbAllowPublicKeyRetrieval: booleanoOpcional("DB_ALLOW_PUBLIC_KEY_RETRIEVAL"),
   jwtSecret: obrigatoria("JWT_SECRET"),
   jwtAccessExpira: process.env.JWT_ACCESS_EXPIRES ?? "15m",
   refreshTtlMinutos: inteiroPositivo("REFRESH_TTL_MINUTES", 30),
