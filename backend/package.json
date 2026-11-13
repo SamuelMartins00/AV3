@@ -1,14 +1,14 @@
 {
-  "name": "av2",
+  "name": "av3",
   "version": "1.0.0",
   "description": "Sistema de logística reversa",
-  "homepage": "https://github.com/SamuelMartins00/AV2#readme",
+  "homepage": "https://github.com/SamuelMartins00/AV3#readme",
   "bugs": {
-    "url": "https://github.com/SamuelMartins00/AV2/issues"
+    "url": "https://github.com/SamuelMartins00/AV3/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SamuelMartins00/AV2.git"
+    "url": "git+https://github.com/SamuelMartins00/AV3.git"
   },
   "license": "ISC",
   "author": "Samuel Martins",
@@ -29,6 +29,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:test:prepare": "tsx scripts/preparar-banco-teste.ts",
     "test:integracao": "vitest run --config vitest.integracao.config.ts",
     "worker": "tsx src/worker.ts",
     "start:worker": "node dist/worker.js"
