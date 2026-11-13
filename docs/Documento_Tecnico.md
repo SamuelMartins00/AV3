@@ -148,7 +148,7 @@ Para escalar horizontalmente, usar Redis persistente e monitorado, MySQL com bac
 
 - MySQL 8 e Redis compatível em execução local.
 - Redis pode ser fornecido por Memurai; confirmar serviço ativo e `redis-cli ping` (ou ferramenta equivalente) antes de iniciar worker.
-- Abrir dois terminais na pasta do projeto: `npm run dev` para API e `npm run worker` para worker.
+- Abrir dois terminais na pasta `backend/`: `npm run dev` para API e `npm run worker` para worker.
 - Configurar `REDIS_URL=redis://127.0.0.1:6379/0`; para integração, `TEST_REDIS_URL` deve apontar para DB lógico separado, por exemplo `/1`.
 - O projeto não depende de Docker para Windows quando MySQL e Memurai estão instalados localmente.
 

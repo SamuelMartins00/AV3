@@ -1,6 +1,6 @@
 # GreenCode — Frontend
 
-Aplicação web do GreenCode AV3, construída com React, Vite e TypeScript. O frontend fica isolado em `front/` e consome a API HTTP do backend; não acessa MySQL ou Redis diretamente.
+Aplicação web do GreenCode AV3, construída com React, Vite e TypeScript. O frontend fica isolado em `frontend/` e consome a API HTTP do backend; não acessa MySQL ou Redis diretamente.
 
 ## Requisitos
 
@@ -13,7 +13,7 @@ Aplicação web do GreenCode AV3, construída com React, Vite e TypeScript. O fr
 A partir da raiz do repositório:
 
 ```bash
-cd front
+cd frontend
 npm install
 ```
 
@@ -33,11 +33,13 @@ VITE_API_URL=/api/v1
 
 ## Executar em desenvolvimento
 
+Suba antes o backend (`cd backend && npm run dev`).
+
 ```bash
 npm run dev
 ```
 
-O Vite inicia a aplicação e encaminha as requisições iniciadas em `/api` para `http://127.0.0.1:3000`, conforme `vite.config.ts`.
+O Vite inicia a aplicação e encaminha as requisições iniciadas em `/api` para `http://127.0.0.1:3000`, conforme `vite.config.ts`. Por isso os caminhos das chamadas em `features/*/api.ts` são relativos ao `baseURL` (`/api/v1`) e **não** devem repetir o prefixo `/api/v1`; o teste `src/lib/__tests__/api-urls.test.ts` protege contra isso.
 
 ## Verificações
 
