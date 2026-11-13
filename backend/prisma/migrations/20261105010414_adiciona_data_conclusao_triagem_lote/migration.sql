@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE `lote` ADD COLUMN `triagemConcluidaEm` DATETIME(3) NULL;
+ALTER TABLE `Lote` ADD COLUMN `triagemConcluidaEm` DATETIME(3) NULL;
