@@ -57,7 +57,7 @@ export default async function chavesApiRoutes(app: FastifyInstance) {
             permissoes: {
               type: "array",
               description:
-                "Permissões efetivamente exigidas hoje pela API pública: LOTES_ESCRITA, LOTES_LEITURA, RASTREABILIDADE_LEITURA e ANALISES_LEITURA. EQUIPAMENTOS_LEITURA, RELATORIOS_LEITURA, TAREFAS_LEITURA e TAREFAS_ESCRITA estão reservadas e ainda não habilitam nenhuma rota.",
+                "Permissões exigidas pela API pública: LOTES_ESCRITA, LOTES_LEITURA, RASTREABILIDADE_LEITURA e ANALISES_LEITURA (consulta, solicitação e polling de análises). EQUIPAMENTOS_LEITURA, RELATORIOS_LEITURA, TAREFAS_LEITURA e TAREFAS_ESCRITA permanecem reservadas para expansão futura.",
               minItems: 1,
               uniqueItems: true,
               items: {

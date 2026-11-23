@@ -33,6 +33,22 @@ export function calcularRegressaoLinear(pontos: Array<{ x: number; y: number }>)
 function media(valores: number[]) { return valores.length ? valores.reduce((a, b) => a + b, 0) / valores.length : null; }
 function periodoDescricao(inicio?: Date, fim?: Date) { return { inicio: inicio?.toISOString() ?? null, fim: fim?.toISOString() ?? null }; }
 
+export function agruparEficienciaPorMes(lotes: Array<{ dataEntrada: Date; triagemConcluidaEm: Date | null }>) {
+  const porMes = new Map<string, number[]>();
+  for (const lote of lotes) {
+    const fim = lote.triagemConcluidaEm;
+    if (!fim || fim < lote.dataEntrada) continue;
+    // O mês de referência é o da conclusão da triagem, não o da entrada do lote.
+    const mes = `${fim.getUTCFullYear()}-${String(fim.getUTCMonth() + 1).padStart(2, "0")}`;
+    porMes.set(mes, [...(porMes.get(mes) ?? []), (fim.getTime() - lote.dataEntrada.getTime()) / 3_600_000]);
+  }
+  return [...porMes.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([mes, valores]) => ({
+    mes, amostra: valores.length, mediaHoras: media(valores),
+    minimoHoras: Math.min(...valores), maximoHoras: Math.max(...valores),
+    statusAmostra: valores.length < 3 ? "INSUFICIENTE" : "SUFICIENTE",
+  }));
+}
+
 export class AnalisesService {
   private async executar(tipo: TipoAnalise, consulta: ExecutarAnaliseBody) {
     const periodo = validarPeriodo(consulta.inicio, consulta.fim);
@@ -47,12 +63,14 @@ export class AnalisesService {
         if (!fim || fim < l.dataEntrada) return [];
         return [(fim.getTime() - l.dataEntrada.getTime()) / 3_600_000];
       });
+      const serieMensal = agruparEficienciaPorMes(lotes);
       dados = { unidade: "horas", amostra: duracoes.length, registrosIgnorados: lotes.length - duracoes.length,
         mediaHoras: media(duracoes), minimoHoras: duracoes.length ? Math.min(...duracoes) : null,
         maximoHoras: duracoes.length ? Math.max(...duracoes) : null,
-        statusAmostra: duracoes.length < 3 ? "INSUFICIENTE" : "SUFICIENTE",
-        observacao: "Uma observação por lote; duração entre dataEntrada e triagemConcluidaEm. Não há atribuição confiável por operador nos campos agregados do lote." };
-      descricao = "Tempo decorrido entre recebimento e conclusão da triagem, em horas.";
+        statusAmostra: duracoes.length < 3 ? "INSUFICIENTE" : "SUFICIENTE", serieMensal,
+        criterioAgrupamentoMensal: "Mês UTC da data de conclusão da triagem (triagemConcluidaEm).",
+        observacao: "Uma observação por lote; duração entre dataEntrada e triagemConcluidaEm. A série mensal permite comparar períodos. Não há atribuição confiável por operador nos campos agregados do lote; por isso, não são apresentados rankings individuais." };
+      descricao = "Tempo decorrido entre recebimento e conclusão da triagem, em horas, com comparação mensal pela data de conclusão.";
     } else if (tipo === "RENTABILIDADE_EQUIPAMENTOS") {
       const avaliacoes = await repo.rentabilidade(consulta.organizacaoId, periodo.inicio, periodo.fim, limite);
       const grupos = new Map<string, { tipo: string; estadoFisicoSnapshot: string | null; marca: string; modelo: string; estimados: number[]; realizados: number[] }>();
