@@ -295,7 +295,20 @@ curl -X POST http://127.0.0.1:3000/api/v1/public/lotes \
 - No Windows, Memurai pode fornecer Redis local. Inicie API e worker em terminais separados.
 - No Ubuntu, use Redis/MySQL instalados ou Docker Compose para desenvolvimento; em produção, prefira serviços supervisionados, TLS, backups e segredos externos.
 - O agendamento analítico é desabilitado por padrão. Para habilitar no worker, defina `ANALYTICS_SCHEDULE_ENABLED=true`, revise cron e timezone.
-- A API pública não oferece criação pública de tarefas analíticas/relatórios nesta versão; os exemplos de criação/polling de tarefa usam JWT interno.
+- Parceiros também podem solicitar análises assíncronas por `POST /api/v1/public/analises` e consultar/baixar em `/tarefas/:id` e `/tarefas/:id/download`, sempre com `x-api-key` e isolamento por organização/chave. O endpoint público usa o escopo `ANALISES_LEITURA`.
 - O rate limit público é fixo em 120 requisições/minuto por chave ou IP. Quotas individuais e rate limit distribuído são futuras melhorias.
 - Resultados são armazenados como JSON no MySQL; armazenamento de arquivos externo, webhooks, métricas Prometheus/Grafana e tracing distribuído não estão implementados.
 - A regressão de vida útil é exploratória e não equivale a previsão técnica garantida.
+
+
+### 8.10 API pública — solicitar relatório analítico assíncrono
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/v1/public/analises \
+  -H "x-api-key: gcp_live_SEU_SEGREDO" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: relatorio-parceiro-2026-01" \
+  -d '{"tipo":"ANALISE_COMPLETA","inicio":"2026-01-01T00:00:00.000Z","fim":"2026-12-31T23:59:59.999Z"}'
+```
+
+O tipo pode ser omitido para gerar as três análises. A resposta HTTP 202 contém `id`, `statusUrl` e `downloadUrl`. Consulte `statusUrl` periodicamente até `CONCLUIDA` e então baixe o JSON em `downloadUrl`. A organização não deve ser enviada no corpo: ela é derivada da API key.

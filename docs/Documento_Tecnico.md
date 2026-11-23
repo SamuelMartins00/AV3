@@ -27,8 +27,9 @@ A implementação atual **não importa `simple-statistics` nem `mathjs`**. Os c�
 - Fonte: lotes com data de entrada e data de conclusão da triagem.
 - Observação: uma duração por lote válido.
 - Fórmula: `duracaoHoras = (triagemConcluidaEm - dataEntrada) / 3.600.000`.
-- Saídas: amostra, registros ignorados, média, mínimo, máximo e status de suficiência (três observações).
-- Limitação: não há atribuição confiável a operador individual.
+- Saídas: amostra, registros ignorados, média, mínimo, máximo, status de suficiência (três observações) e série mensal com média/mínimo/máximo e quantidade de lotes.
+- Agrupamento mensal: mês UTC de `triagemConcluidaEm`, que representa o período em que a triagem foi concluída.
+- Limitação: não há atribuição confiável a operador individual; por isso, o sistema não apresenta ranking/comparação individual de operadores.
 
 ### 2.3 Rentabilidade
 
@@ -76,13 +77,18 @@ Tarefas: `POST/GET /api/v1/tarefas`, `GET /:id`, `PATCH /:id`, `DELETE /:id` e `
 
 Prefixo: `/api/v1/public`. Autenticação pelo cabeçalho `x-api-key`. A chave está vinculada a uma organização, e a consulta/alteração de dados usa o `organizacaoId` da chave, não um ID fornecido pelo parceiro.
 
-Rotas existentes nesta versão:
+Rotas públicas:
 - `POST /lotes` — exige `LOTES_ESCRITA`; a organização é inferida da chave.
 - `GET /lotes` e `GET /lotes/:id` — exige `LOTES_LEITURA`.
 - `GET /equipamentos/:id/rastreabilidade` — exige `RASTREABILIDADE_LEITURA`.
-- `GET /analises` — exige `ANALISES_LEITURA`.
+- `GET /analises` — lista resultados da organização e exige `ANALISES_LEITURA`.
+- `POST /analises` — solicita relatório analítico assíncrono (`ANALISE_COMPLETA` por padrão, ou uma análise específica); retorna HTTP 202 e URLs de polling/download. Exige `ANALISES_LEITURA`.
+- `GET /tarefas/:id` — consulta status e resultado, isolado por `organizacaoId` e `chaveApiId` da chave autenticada.
+- `GET /tarefas/:id/download` — baixa o resultado JSON concluído; respeita expiração e o mesmo isolamento.
 
-O enum contém escopos adicionais, mas isso não significa que existam endpoints públicos de tarefas, relatórios ou equipamentos genéricos. A API pública não cria tarefas analíticas nesta versão.
+Exemplo de solicitação: `POST /api/v1/public/analises` com `x-api-key`, `Content-Type: application/json` e corpo `{"tipo":"ANALISE_COMPLETA","inicio":"2026-01-01T00:00:00.000Z","fim":"2026-12-31T23:59:59.999Z"}`. O cabeçalho `Idempotency-Key` é opcional e evita duplicação de solicitações equivalentes. O parceiro consulta o `statusUrl` retornado até `CONCLUIDA` e então acessa `downloadUrl`. A organização nunca é aceita no corpo: é obtida da API key. Tarefas são vinculadas também ao ID da chave que as criou, impedindo que outra chave da mesma organização as consulte.
+
+Os escopos `EQUIPAMENTOS_LEITURA`, `RELATORIOS_LEITURA`, `TAREFAS_LEITURA` e `TAREFAS_ESCRITA` continuam reservados para futuras rotas; as operações acima usam `ANALISES_LEITURA`.
 
 ### 3.3 Gerenciamento de chaves
 
@@ -166,7 +172,7 @@ Veja o README para configuração detalhada, migrations, seed, comandos de execu
 ## 7. Limitações e decisões futuras
 
 - Nenhuma biblioteca estatística externa foi adotada até esta versão; `simple-statistics`/`mathjs` podem ser avaliadas se novos métodos justificarem dependências.
-- A API pública não oferece submissão de tarefas/relatórios nesta versão.
+- A API pública entrega relatórios analíticos em JSON por tarefa assíncrona; exportação CSV/PDF e webhooks continuam como evolução futura.
 - Resultados são JSON no MySQL; armazenamento externo de arquivos não está implementado.
 - Webhooks, quotas por parceiro, rate limit distribuído, métricas centralizadas, tracing, exportação CSV/PDF, modelos multivariados e benchmark de carga permanecem decisões futuras.
 - A política de retenção elimina o payload após expiração, mas o registro da tarefa permanece até exclusão explícita.

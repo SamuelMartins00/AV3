@@ -474,6 +474,20 @@ curl http://127.0.0.1:3000/api/v1/public/equipamentos/123/rastreabilidade \
 
 A chave deve ser tratada como segredo. Guarde-a em local seguro e não a publique em repositórios, capturas de tela ou logs.
 
+### Solicitação de relatório analítico pelo parceiro
+
+Uma chave com a permissão `ANALISES_LEITURA` também pode solicitar um relatório completo ou uma análise específica. A organização é obtida da chave, sem aceitar `organizacaoId` enviado pelo parceiro.
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/v1/public/analises \
+  -H "x-api-key: gcp_live_SUA_CHAVE" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: relatorio-parceiro-2026-01" \
+  -d '{"tipo":"ANALISE_COMPLETA","inicio":"2026-01-01T00:00:00.000Z","fim":"2026-12-31T23:59:59.999Z"}'
+```
+
+A resposta HTTP 202 informa `statusUrl` para polling em `GET /api/v1/public/tarefas/:id` e `downloadUrl` para obter o resultado JSON quando a tarefa estiver concluída. O acesso à tarefa é restrito à mesma organização e à mesma chave de API que a criou.
+
 ---
 
 ## Processamento Assíncrono

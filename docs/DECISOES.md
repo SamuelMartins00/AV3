@@ -136,9 +136,9 @@ O diagrama de classes representa as entidades persistidas pelo Prisma, seus prin
 
 - **Decisão:** manter os endpoints destinados a parceiros no agrupamento `/api/v1/public`, separado das rotas internas e administrativas.
 - **Motivo:** delimitar a superfície de integração externa, explicitar o versionamento e permitir políticas de autenticação e autorização próprias.
-- **Rotas públicas implementadas nesta versão:** `POST /lotes`, `GET /lotes`, `GET /lotes/:id`, `GET /equipamentos/:id/rastreabilidade` e `GET /analises`.
+- **Rotas públicas:** `POST /lotes`, `GET /lotes`, `GET /lotes/:id`, `GET /equipamentos/:id/rastreabilidade`, `GET/POST /analises`, `GET /tarefas/:id` e `GET /tarefas/:id/download`.
 - **Autorização:** cada rota exige a permissão correspondente da chave, como `LOTES_ESCRITA`, `LOTES_LEITURA`, `RASTREABILIDADE_LEITURA` ou `ANALISES_LEITURA`.
-- **Limitação:** embora o enum de permissões contenha escopos adicionais, isso não significa que existam endpoints públicos correspondentes. Nesta versão, a API pública não cria tarefas analíticas nem oferece endpoints públicos genéricos de tarefas ou relatórios.
+- **Autorização assíncrona:** a solicitação e o polling de análises usam `ANALISES_LEITURA`; a tarefa é vinculada à organização e à chave de API que a criou. Os escopos genéricos `TAREFAS_LEITURA` e `TAREFAS_ESCRITA` permanecem reservados.
 
 ### D-18 — Chaves de API vinculadas a organizações
 
@@ -196,8 +196,23 @@ O diagrama de classes representa as entidades persistidas pelo Prisma, seus prin
 
 - A camada analítica atual utiliza cálculos nativos; bibliotecas como `simple-statistics` e `mathjs` podem ser avaliadas caso novos métodos justifiquem dependências adicionais.
 - A previsão de vida útil é exploratória e depende da quantidade e qualidade do histórico de depreciação disponível.
-- A API pública não oferece submissão de tarefas/relatórios nesta versão; os endpoints públicos existentes estão listados em D-17.
+- A API pública oferece submissão/polling de análises em JSON; exportação CSV/PDF e webhooks permanecem futuras evoluções.
 - Os resultados de tarefas são armazenados como JSON no MySQL. Armazenamento externo de arquivos não está implementado.
 - Webhooks, quotas individuais por parceiro, rate limit distribuído, métricas centralizadas, tracing distribuído, exportação CSV/PDF, modelos preditivos multivariados e benchmark de carga permanecem evoluções futuras.
 - A retenção remove o payload de resultado após a expiração, mas o registro da tarefa permanece até exclusão explícita.
 - O agendamento diário permanece desabilitado por padrão e depende de configuração explícita do ambiente.
+
+
+### D-25 — Relatórios analíticos assíncronos para parceiros
+
+- **Decisão:** expor `POST /api/v1/public/analises`, `GET /tarefas/:id` e `GET /tarefas/:id/download` dentro do prefixo público versionado.
+- **Processamento:** reutilizar o producer, a fila BullMQ, o worker, a política de retry, a persistência e a retenção já existentes. O tipo padrão é `ANALISE_COMPLETA`; o parceiro pode solicitar uma análise específica.
+- **Segurança:** organização e chave são derivadas da API key autenticada. A consulta da tarefa exige correspondência simultânea de `organizacaoId` e `chaveApiId`, evitando acesso por outra chave, inclusive da mesma organização.
+- **Idempotência:** `Idempotency-Key` opcional com escopo por chave de API.
+- **Formato:** resultado JSON persistido no MySQL e disponibilizado por download autenticado enquanto não expirar.
+
+### D-26 — Comparação mensal da eficiência operacional
+
+- **Decisão:** acrescentar série mensal à análise de eficiência, agrupando pela data UTC de conclusão da triagem (`triagemConcluidaEm`).
+- **Saídas:** amostra, média, mínimo, máximo e suficiência amostral para cada mês.
+- **Limitação preservada:** o modelo de dados não oferece atribuição confiável de lote a operador individual; não são fabricados identificadores nem rankings de operadores.
